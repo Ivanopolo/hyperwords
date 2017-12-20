@@ -1,3 +1,5 @@
 data
 .hg*
 .idea
+.ipynb_checkpoints
+hyperwords/*/__*

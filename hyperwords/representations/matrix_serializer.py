@@ -16,23 +16,23 @@ def load_matrix(f):
 def save_vocabulary(path, vocab):
     with open(path, 'w') as f:
         for w in vocab:
-            f.writelines(w)
+            f.writelines(w + "\n")
 
 
 def load_vocabulary(path):
     with open(path) as f:
-        vocab = [line.strip() for line in f if len(line) > 0]
+        vocab = [line.strip().split(",")[0] for line in f if len(line) > 0]
     return dict([(a, i) for i, a in enumerate(vocab)]), vocab
 
 
 def save_count_vocabulary(path, vocab):
     with open(path, 'w') as f:
         for w, c in vocab:
-            f.writelines(w + "," + str(c))
+            f.write(w + "," + str(c) + "\n")
 
 
 def load_count_vocabulary(path):
     with open(path) as f:
         # noinspection PyTypeChecker
-        vocab = dict([line.strip().split() for line in f if len(line) > 0])
+        vocab = dict([line.strip().split(",") for line in f if len(line) > 0])
     return vocab
