@@ -45,7 +45,7 @@ def main():
 
     if type_of_laplacian == "unnormalized":
         preconditioner = scipy.sparse.spdiags(1.0/degrees, [0], n, n, format='csr')
-    if type_of_laplacian == "random_walk_normalized":
+    elif type_of_laplacian == "random_walk_normalized":
         D_inv = scipy.sparse.spdiags(1.0/degrees, [0], n, n, format='csr')
         B = D_inv
     elif type_of_laplacian == "symmetric_normalized":
