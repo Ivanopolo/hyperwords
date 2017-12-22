@@ -38,7 +38,7 @@ def main():
 
     rng = np.random.RandomState(0)
     dim = int(args["--dim"]) + 1
-    init = rng.rand(n, dim, dtype=np.float64)
+    init = rng.rand(n, dim)
     init[:, 0] = np.ones(dim)
     B = None
 
