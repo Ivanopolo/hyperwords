@@ -39,7 +39,7 @@ def main():
     rng = np.random.RandomState(0)
     dim = int(args["--dim"]) + 1
     init = rng.rand(n, dim)
-    init[:, 0] = np.ones(dim)
+    init[:, 0] = np.ones(n)
     B = None
 
     if type_of_laplacian == "random_walk_normalized":
