@@ -65,3 +65,6 @@ def main():
     np.save(output_path + ".vals", vals[1:])
     np.save(output_path + ".degrees", degrees)
     print("Time elapsed %f" % (time.time() - start))
+
+if __name__ == '__main__':
+    main()
