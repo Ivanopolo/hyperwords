@@ -14,38 +14,29 @@ word2vecf/word2vecf $WORD2VECF_OPTS -train $OUTPUT_DIR/wikipedia.corpus.nodups_p
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.words
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.contexts
 
+Systematically explore the following:
+1/ Adjacency matrix - win=1, win=2 (unweighted), unweighted, weighted, weighted^t
+2/ Build L - unnormalized, non-symm normalized, symm normalized
+3/ Learn eigenvectors
+4/ Scale embeddings - no scaling, inverse sqrt(eigenvalue) scaling by col, deepwalk scaling by col (win=2,5,10), degree scaling by row (only for L2-dist)
+5/ Measure similarity - cos, L2, log L2
+6/ Evaluate on tasks
++ Log timing and memory consumption
+
 ### Evaluate on word similarity task
 
 python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/wiki/deps testsets/ws/ws353.txt
 0.613
 
-python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/sgns testsets/ws/ws353.txt
-0.072
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/ws353.txt
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/ws353_relatedness.txt
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/ws353_similarity.txt
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/radinsky_mturk.txt
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/luong_rare.txt
+python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/ws/bruni_men.txt
 
-python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/sgns_d=100 testsets/ws/ws353.txt
-0.057
+python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/analogy/google.txt
+python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/eigenscaled_d=500 testsets/analogy/msr.txt
 
-python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/sgns_d=300_win=5_iter=3 testsets/ws/ws353.txt
-0.072
-
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_d=50 testsets/ws/ws353.txt
-0.088
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_d=51 testsets/ws/ws353.txt
-0.090
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_d=100 testsets/ws/ws353.txt
-0.089
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_d=300 testsets/ws/ws353.txt
-0.045
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_unscaled_d=101 testsets/ws/ws353.txt
-0.040
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/spectral_embeddings_unscaled_d=100 testsets/ws/ws353.txt
-0.089
-
-python hyperwords/ws_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/ws/ws353.txt
-0.210
+python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/analogy/google.txt
+python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/analogy/msr.txt

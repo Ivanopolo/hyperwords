@@ -26,7 +26,7 @@ def read_test_set(path):
     with open(path) as f:
         for line in f:
             x, y, sim = line.strip().lower().split()
-            test.append(((x, y), sim))
+            test.append(((x, y), float(sim)))
     return test
 
 
