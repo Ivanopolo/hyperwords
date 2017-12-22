@@ -41,7 +41,10 @@ def main():
     init = rng.rand(n, dim)
     init[:, 0] = np.ones(n)
     B = None
+    preconditioner = None
 
+    if type_of_laplacian == "unnormalized":
+        preconditioner = scipy.sparse.spdiags(1.0/degrees, [0], n, n, format='csr')
     if type_of_laplacian == "random_walk_normalized":
         D_inv = scipy.sparse.spdiags(1.0/degrees, [0], n, n, format='csr')
         B = D_inv
@@ -50,13 +53,13 @@ def main():
         D_inv_sqrt = scipy.sparse.spdiags(1.0 / degrees_sqrt, [0], n, n, format='csr')
         L = D_inv_sqrt.dot(L.dot(D_inv_sqrt))
         init[:, 0] = degrees_sqrt
-    elif not type_of_laplacian == "unnormalized":
+    else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
     print("Solving for eigenvectors and eigenvalues, %f" % time.time())
     max_iter = int(args["--max_iter"])
     verbosity = int(args["--verbosity"])
-    vals, vecs = lobpcg(L, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
+    vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
 
     postfix = "_%s_pow=%.2f_dim=%d" % (type_of_laplacian, power, dim)
     output_path = args["<output_path>"] + postfix
