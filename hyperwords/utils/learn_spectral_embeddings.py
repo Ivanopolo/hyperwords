@@ -22,9 +22,7 @@ def main():
     print("Loading adjacency matrix, %f" % time.time())
     adjacency_matrix = load_npz(args["<adjacency_matrix_path>"])
     power = float(args["--pow"])
-    if pow == 0.0:
-        adjacency_matrix.data = np.ones_like(adjacency_matrix.data, dtype=np.float64)
-    elif power < 1.0:
+    if power <= 1.0:
         adjacency_matrix.data = adjacency_matrix.data**power
     elif power > 1.0:
         raise NotImplementedError("We accept only power in [0,1] and it is %f" % power)
