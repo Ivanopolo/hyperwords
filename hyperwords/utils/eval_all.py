@@ -24,7 +24,7 @@ class SpectralEvaluator(object):
 
         deepwalk_eigenscaling = np.zeros(vals.shape[0])
         for i in range(1, deepwalk_window + 1):
-            deepwalk_eigenscaling += vals**i
+            deepwalk_eigenscaling += (1 - vals)**i
 
         deepwalk_eigenscaling = np.sqrt(deepwalk_eigenscaling / deepwalk_window)
         self.deepwalk_vecs = deepwalk_eigenscaling * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
@@ -136,8 +136,8 @@ def main():
     sim_fun_list = {
         "Cos": embs.cosine_similarity_vecs,
         "L2": embs.l2_similarity_vecs,
-        "LogCos": embs.log_cosine_similarity_vecs,
-        "LogL2": embs.log_l2_similarity_vecs
+        # "LogCos": embs.log_cosine_similarity_vecs,
+        # "LogL2": embs.log_l2_similarity_vecs
     }
 
     analogy_datasets_dir = args["<analogy_datasets_dir>"]
@@ -151,6 +151,23 @@ def main():
             for get_name, vecs in vecs_list.items():
                 sims = prepare_similarities(vecs, embs.wi, ix, sim_fun)
                 accuracy_add, accuracy_mul = evaluate_analogy(sims, embs.wi, embs.iw, xi, data)
+
+                # total_score = 0
+                # batch_size = 2000
+                # for batch_first_example in range(0, len(data), batch_size):
+                #     data_batch = data[batch_first_example:min(len(data), batch_first_example+batch_size)]
+                #     print("batch %d %d" % (batch_first_example, min(len(data), batch_first_example+batch_size)))
+                #
+                #     print("computing query vecs")
+                #     query_vecs, expected_result = prepare_new_vecs(vecs, data_batch, embs.wi)
+                #     print("computing similarities to query vecs")
+                #     sims = sim_fun(query_vecs, vecs)
+                #     score = evaluate_analogy2(sims, data_batch, expected_result, embs.wi)
+                #     total_score += score
+                #
+                # accuracy_add = total_score / len(data)
+                # accuracy_mul = 0
+
                 res_name = "_".join([dataset, sim_name, get_name])
                 results[res_name] = (accuracy_add, accuracy_mul)
                 print(res_name, accuracy_add, accuracy_mul)
@@ -194,6 +211,40 @@ def get_vocab(data):
     return dict([(a, i) for i, a in enumerate(vocab)]), vocab
 
 
+def get_vec(vecs, word, wi):
+    if word in wi:
+        return vecs[wi[word]]
+    else:
+        return np.zeros(vecs.shape[1])
+
+
+def prepare_new_vecs(vecs, data, wi):
+    query_vecs = np.zeros([len(data), vecs.shape[1]], dtype=np.float64)
+    expected_result = -np.ones(len(data))
+
+    for i, (a, a_, b, b_) in enumerate(data):
+        va = get_vec(vecs, a, wi)
+        va_ = get_vec(vecs, a_, wi)
+        vb = get_vec(vecs, b, wi)
+        query_vec = -va + va_ + vb
+        query_vecs[i] = query_vec
+        if b_ in wi:
+            expected_result[i] = wi[b_]
+
+    return query_vecs, expected_result
+
+
+def evaluate_analogy2(sims, data, expected_results, wi):
+    for i, (a, a_, b, b_) in enumerate(data):
+        if a in wi: sims[i][wi[a]] = 0
+        if a_ in wi: sims[i][wi[a_]] = 0
+        if b in wi: sims[i][wi[b]] = 0
+
+    answers = np.argmax(sims, axis=1)
+    score = (answers == expected_results).sum()
+    return score
+
+
 def prepare_similarities(vecs, wi, vocab, sim_fun):
     vocab_representation = vecs[[wi[w] if w in wi else 0 for w in vocab]]
 
@@ -204,7 +255,9 @@ def prepare_similarities(vecs, wi, vocab, sim_fun):
     sims = sim_fun(vocab_representation, vecs)
     sims = (sims+1) / 2
     # sims -= np.min(sims)
-    # sims /= np.max(sims)
+    # sims /= np.max(sims) * 3.0
+    # sims += 1.0 - 1.0/3.0
+
     return sims
 
 
