@@ -15,6 +15,7 @@ class SpectralEvaluator(object):
         self.wi = wi
         self.iw = iw
         self.vecs = np.load(input_path + ".vecs.npy")
+        print(self.vecs.shape, len(iw))
         self.degrees = np.load(input_path + ".degrees.npy")
         vals = np.load(input_path + ".vals.npy")
 
@@ -202,8 +203,8 @@ def prepare_similarities(vecs, wi, vocab, sim_fun):
 
     sims = sim_fun(vocab_representation, vecs)
     sims = (sims+1) / 2
-    #sims -= np.min(sims)
-    #sims /= np.max(sims)
+    # sims -= np.min(sims)
+    # sims /= np.max(sims)
     return sims
 
 

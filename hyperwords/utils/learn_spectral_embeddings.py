@@ -1,9 +1,11 @@
 from docopt import docopt
 import numpy as np
-from scipy.sparse import load_npz
+from scipy.sparse import load_npz, csr_matrix
 from scipy.sparse.linalg import lobpcg
 import scipy.sparse
 import time
+
+from ..representations.matrix_serializer import load_vocabulary
 
 
 def main():
@@ -20,7 +22,9 @@ def main():
 
     start = time.time()
     print("Loading adjacency matrix, %f" % time.time())
-    adjacency_matrix = load_npz(args["<adjacency_matrix_path>"])
+    adjacency_matrix_path = args["<adjacency_matrix_path>"]
+    adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
+    _, iw = load_vocabulary(adjacency_matrix_path + ".words.vocab")
     power = float(args["--pow"])
     if power <= 1.0:
         adjacency_matrix.data = adjacency_matrix.data**power
@@ -29,8 +33,12 @@ def main():
 
     type_of_laplacian = args["<type_of_laplacian>"]
     print("Building %s laplacian, %f" % (type_of_laplacian, time.time()))
-    n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
+    #top_k_words = np.argsort(degrees)[-100:]
+    #adjacency_matrix, degrees, iw = delete_from_csr(adjacency_matrix, top_k_words, iw)
+
+    n = adjacency_matrix.shape[0]
+    print(n)
     D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
     L = D - adjacency_matrix
 
@@ -51,6 +59,8 @@ def main():
         D_inv_sqrt = scipy.sparse.spdiags(1.0 / degrees_sqrt, [0], n, n, format='csr')
         L = D_inv_sqrt.dot(L.dot(D_inv_sqrt))
         init[:, 0] = degrees_sqrt
+    elif type_of_laplacian == "bethe hessian":
+        pass
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
@@ -65,7 +75,34 @@ def main():
     np.save(output_path + ".vecs", vecs[:, 1:])
     np.save(output_path + ".vals", vals[1:])
     np.save(output_path + ".degrees", degrees)
+
+    with open(output_path + ".words.vocab", "w") as f:
+        for i, w in enumerate(iw):
+            f.write("%s\n" % w)
+
     print("Time elapsed %f" % (time.time() - start))
+
+
+def delete_from_csr(mat, indices, iw):
+    """
+    Remove the rows (denoted by ``row_indices``) and columns (denoted by ``col_indices``) form the CSR sparse matrix ``mat``.
+    WARNING: Indices of altered axes are reset in the returned matrix
+    """
+    if not isinstance(mat, csr_matrix):
+        raise ValueError("works only for CSR format -- use .tocsr() first")
+
+    mask = np.ones(mat.shape[0], dtype=bool)
+    mask[indices] = False
+    mat = mat[mask][:,mask]
+    iw = np.asarray(iw)[mask]
+
+    degrees = np.asarray(mat.sum(axis=1), dtype=np.float64).flatten()
+    empty_words = np.argwhere(degrees == 0)
+    mask = np.ones(mat.shape[0], dtype=bool)
+    mask[empty_words] = False
+    iw = iw[mask]
+    return mat[mask][:,mask], degrees[mask], iw
+
 
 if __name__ == '__main__':
     main()
