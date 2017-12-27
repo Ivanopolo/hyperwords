@@ -1,3 +1,18 @@
+How to make spectral clustering great again:
+1/ Similarity matrix - thresholded PMI with different windows
+2/ Laplacians - symmetric normalized
+3/ Eigenweighting - none, commute time, deepwalk (gives small improvements)
+4/ Simimilarity measures - cos, l2, log cos, log l2 (mostly cos)
+
+Try SVD on PMI matrix - it should not be very different from what we're learning in laplacians.
+Maybe because we learn algebraically largest eigenpairs and not by magnitude?
+
+Ideas for tuning / speeding-up:
+1/ Different PMIs - https://aclanthology.info/pdf/W/W13/W13-3503.pdf
+2/ Preconditioners - max-weight spanning tree or forest
+3/ Less precision
+
+
 export OUTPUT_DIR=/Users/i.lobov/hyperwords/data/wiki
 export CORPUS=wikipedia.corpus.nodups
 bash scripts/clean_corpus.sh $OUTPUT_DIR/$CORPUS > $OUTPUT_DIR/$CORPUS.clean
@@ -14,16 +29,14 @@ word2vecf/word2vecf $WORD2VECF_OPTS -train $OUTPUT_DIR/wikipedia.corpus.nodups_p
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.words
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.contexts
 
-Systematically explore the following:
-1/ Adjacency matrix - win=1, win=2 (unweighted), unweighted, weighted, weighted^t
-2/ Build L - unnormalized, non-symm normalized, symm normalized
-3/ Learn eigenvectors
-4/ Scale embeddings - no scaling, inverse sqrt(eigenvalue) scaling by col, deepwalk scaling by col (win=2,5,10), degree scaling by row (only for L2-dist)
-5/ Measure similarity - cos, L2, log L2
-6/ Evaluate on tasks
-+ Log timing and memory consumption
+
+python -m hyperwords.utils.learn_spectral_embeddings --pow 0.0 --verbosity 1 /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1 symmetric_normalized /Users/i.lobov/hyperwords/data/wiki/win=1_highest_prec
 
 ### Evaluate on word similarity task
+
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_highest_prec_symmetric_normalized_pow=0.00_dim=501 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+
+
 
 python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/wiki/deps testsets/ws/ws353.txt
 0.613

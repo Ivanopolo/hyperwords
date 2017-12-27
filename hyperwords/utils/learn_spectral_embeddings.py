@@ -1,7 +1,7 @@
 from docopt import docopt
 import numpy as np
 from scipy.sparse import load_npz, csr_matrix
-from scipy.sparse.linalg import lobpcg
+from scipy.sparse.linalg import lobpcg, eigsh
 import scipy.sparse
 import time
 
@@ -67,6 +67,7 @@ def main():
     print("Solving for eigenvectors and eigenvalues, %f" % time.time())
     max_iter = int(args["--max_iter"])
     verbosity = int(args["--verbosity"])
+
     vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
 
     postfix = "_%s_pow=%.2f_dim=%d" % (type_of_laplacian, power, dim)
