@@ -35,8 +35,8 @@ def main():
 
     n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
-    if args["pmi"]:
-        neg = int(args["neg"])
+    if args["--pmi"]:
+        neg = int(args["--neg"])
         print("Building PMI matrix with negative sampling=%d" % neg)
         print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
         total_count = degrees.sum()

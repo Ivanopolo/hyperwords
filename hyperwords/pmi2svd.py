@@ -2,6 +2,7 @@ from sparsesvd import sparsesvd
 
 from docopt import docopt
 import numpy as np
+import time
 
 from representations.explicit import PositiveExplicit
 from representations.matrix_serializer import save_vocabulary
@@ -24,7 +25,9 @@ def main():
     
     explicit = PositiveExplicit(pmi_path, normalize=False, neg=neg)
 
+    start = time.time()
     ut, s, vt = sparsesvd(explicit.m.tocsc(), dim)
+    print("Time elapsed for SVD: %f" % (time.time() - start))
 
     np.save(output_path + '.ut.npy', ut)
     np.save(output_path + '.s.npy', s)
