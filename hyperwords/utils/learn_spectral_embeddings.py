@@ -18,6 +18,8 @@ def main():
         --max_iter NUM     Maximum number of iterations of LOBPCG algorithm [default: 100]
         --dim NUM          Number of eigen-pairs to return [default: 500]
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
+        --pmi              Turn adjacency matrix into PMI-based adjacency matrix
+        --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
     """)
 
     start = time.time()
@@ -31,12 +33,23 @@ def main():
     elif power > 1.0:
         raise NotImplementedError("We accept only power in [0,1] and it is %f" % power)
 
+    n = adjacency_matrix.shape[0]
+    degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
+    if args["pmi"]:
+        neg = int(args["neg"])
+        print("Building PMI matrix with negative sampling=%d" % neg)
+        print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
+        total_count = degrees.sum()
+        D_inv = scipy.sparse.spdiags(1.0 / degrees, [0], n, n, format='csr')
+        adjacency_matrix = D_inv.dot(adjacency_matrix.dot(D_inv))
+        adjacency_matrix.data = np.maximum(np.log(adjacency_matrix.data * total_count) - np.log(neg), 0)
+        adjacency_matrix.eliminate_zeros()
+        degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten() #Update degrees
+        print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
 
     type_of_laplacian = args["<type_of_laplacian>"]
     print("Building %s laplacian, %f" % (type_of_laplacian, time.time()))
-    degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
-    n = adjacency_matrix.shape[0]
-    print(n)
+
     D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
     L = D - adjacency_matrix
 
