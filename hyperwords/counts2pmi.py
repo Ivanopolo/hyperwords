@@ -33,8 +33,8 @@ def read_counts_matrix(counts_path):
     """
     words = load_count_vocabulary(counts_path + '.words.vocab')
     contexts = load_count_vocabulary(counts_path + '.contexts.vocab')
-    words = list(words.keys())
-    contexts = list(contexts.keys())
+    words = list(words)
+    contexts = list(contexts)
     iw = sorted(words)
     ic = sorted(contexts)
     wi = dict([(w, i) for i, w in enumerate(iw)])
