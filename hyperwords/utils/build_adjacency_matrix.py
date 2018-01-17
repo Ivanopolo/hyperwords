@@ -27,12 +27,13 @@ def main():
     with open(args["<counts_path>"], 'r') as f:
         for line in f:
             count, word_a, word_b = line.strip().split()
-            word_a_id = word2id[word_a]
-            word_b_id = word2id[word_b]
+            if word_a != word_b:
+                word_a_id = word2id[word_a]
+                word_b_id = word2id[word_b]
 
-            data.append(float(count))
-            rows.append(word_a_id)
-            cols.append(word_b_id)
+                data.append(float(count))
+                rows.append(word_a_id)
+                cols.append(word_b_id)
 
     print("Building the adjacency matrix...")
     adjacency_matrix = csr_matrix((data, (rows, cols)), shape=[N, N], dtype=np.float64)
