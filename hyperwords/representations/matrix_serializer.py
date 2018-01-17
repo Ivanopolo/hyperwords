@@ -34,5 +34,5 @@ def save_count_vocabulary(path, vocab):
 def load_count_vocabulary(path):
     with open(path) as f:
         # noinspection PyTypeChecker
-        vocab = dict([line.strip().split(",") for line in f if len(line) > 0])
+        vocab = dict([line.strip().split(",")[0] for line in f if len(line) > 0])
     return vocab
