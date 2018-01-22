@@ -1,9 +1,10 @@
-from docopt import docopt
-import numpy as np
-from scipy.sparse import load_npz, csr_matrix
-from scipy.sparse.linalg import lobpcg, eigsh
-import scipy.sparse
 import time
+
+import numpy as np
+import scipy.sparse
+from docopt import docopt
+from scipy.sparse import load_npz
+from scipy.sparse.linalg import lobpcg, eigsh
 
 from ..representations.matrix_serializer import load_vocabulary
 
@@ -20,7 +21,6 @@ def main():
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
         --pmi              Turn adjacency matrix into PMI-based adjacency matrix
         --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
-        --largest          Find largest eigenvalues
     """)
 
     start = time.time()
@@ -31,7 +31,7 @@ def main():
     power = float(args["--pow"])
     if power <= 1.0:
         adjacency_matrix.data = adjacency_matrix.data**power
-    elif power > 1.0:
+    elif power > 1.0 or power < 0.0:
         raise NotImplementedError("We accept only power in [0,1] and it is %f" % power)
 
     n = adjacency_matrix.shape[0]
@@ -71,21 +71,33 @@ def main():
         D_inv_sqrt = scipy.sparse.spdiags(1.0 / degrees_sqrt, [0], n, n, format='csr')
         L = D_inv_sqrt.dot(L.dot(D_inv_sqrt))
         init[:, 0] = degrees_sqrt
+    elif type_of_laplacian == "bethe_hessian":
+        I = scipy.sparse.eye(n, format='csr')
+        # r = np.sqrt(degrees.mean())
+        r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
+        L = (r ** 2 - 1) * I - r * adjacency_matrix + D
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
     print("Solving for eigenvectors and eigenvalues, %f" % time.time())
     max_iter = int(args["--max_iter"])
     verbosity = int(args["--verbosity"])
-    largest = args["--largest"]
 
-    vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=largest, verbosityLevel=verbosity)
+    if type_of_laplacian == "bethe_hessian":
+        ### Lanzcos algorithm for Bethe Hessian
+        tol = np.sqrt(1e-15) * n
+        vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+    else:
+        ### LOBPCG learning
+        vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
+        vals = vals[1:]
+        vecs = vecs[:, 1:]
 
     postfix = "_%s_pow=%.2f_dim=%d" % (type_of_laplacian, power, dim)
     output_path = args["<output_path>"] + postfix
 
-    np.save(output_path + ".vecs", vecs[:, 1:])
-    np.save(output_path + ".vals", vals[1:])
+    np.save(output_path + ".vecs", vecs)
+    np.save(output_path + ".vals", vals)
     np.save(output_path + ".degrees", degrees)
 
     with open(output_path + ".words.vocab", "w") as f:

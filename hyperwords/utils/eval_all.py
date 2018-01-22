@@ -67,7 +67,7 @@ def main():
 
     sim_fun_list = {
         "Cos": embs.cosine_similarity,
-        "L2": embs.l2_similarity
+        # "L2": embs.l2_similarity
     }
 
     ws_datasets_dir = args["<ws_datasets_dir>"]
@@ -93,7 +93,7 @@ def main():
 
     sim_fun_list = {
         "Cos": embs.cosine_similarity_vecs,
-        "L2": embs.l2_similarity_vecs
+        # "L2": embs.l2_similarity_vecs
     }
 
     analogy_datasets_dir = args["<analogy_datasets_dir>"]
