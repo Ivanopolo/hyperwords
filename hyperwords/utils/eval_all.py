@@ -10,50 +10,25 @@ from ..representations.matrix_serializer import load_vocabulary
 
 
 class SpectralEvaluator(object):
-    def __init__(self, input_path, deepwalk_window=5, deepwalk_negative_sampling=5.0):
+    def __init__(self, input_path):
         wi, iw = load_vocabulary(input_path + ".words.vocab")
         self.wi = wi
         self.iw = iw
         self.vecs = np.load(input_path + ".vecs.npy")
-        print(self.vecs.shape, len(iw))
+        print(self.vecs.shape, len(wi))
         self.degrees = np.load(input_path + ".degrees.npy")
-        vals = np.load(input_path + ".vals.npy")
+        vals = np.abs(np.load(input_path + ".vals.npy"))
 
         commute_time_eigenscaling = np.sqrt(1.0 / vals)
         self.commute_time_vecs = commute_time_eigenscaling * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
-
-        deepwalk_eigenscaling = np.zeros(vals.shape[0])
-        for i in range(1, deepwalk_window + 1):
-            deepwalk_eigenscaling += (1 - vals)**i
-
-        deepwalk_eigenscaling = np.sqrt(deepwalk_eigenscaling / deepwalk_window)
-        self.deepwalk_vecs = deepwalk_eigenscaling * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
-
-        self.C = np.sum(self.degrees) / deepwalk_negative_sampling
-
-        self.dummy = np.zeros(vals.shape[0])
+        self.sqrt_vecs = np.sqrt(vals) * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
         self.eps = 1e-6
 
     def get_rep(self, word, vecs):
         if word in self.wi:
             return vecs[self.wi[word]]
         else:
-            return self.dummy
-
-    def _log_inner_product(self, x, y):
-        return np.log(max(self.C * x.dot(y), self.eps))
-
-    def log_cosine_similarity(self, x, y):
-        inner_product = self._log_inner_product(x,y)
-        xTx = self._log_inner_product(x,x)
-        yTy = self._log_inner_product(y,y)
-        return inner_product / np.sqrt(max(xTx * yTy, self.eps))
-
-    def log_l2_similarity(self, x, y):
-        inner_product = self._log_inner_product(x, y)
-        xTx = self._log_inner_product(x, x)
-        yTy = self._log_inner_product(y, y)
-        return - (xTx + yTy - 2 * inner_product)
+            raise IndexError("There is not word %s in the dictionary" % word)
 
     def cosine_similarity(self, x, y):
         inner_product = x.dot(y)
@@ -61,21 +36,6 @@ class SpectralEvaluator(object):
 
     def l2_similarity(self, x, y):
         return -np.mean((x - y)**2)
-
-    def log_cosine_similarity_vecs(self, vocab_representation, vecs):
-        inner_prods = np.log(np.maximum(self.C * vocab_representation.dot(vecs.T), self.eps))
-        diagonal_prod = np.log(np.maximum(self.C * np.sum(vecs * vecs, axis=1), self.eps))
-        self_prods = np.log(np.maximum(self.C * np.sum(vocab_representation * vocab_representation, axis=1, keepdims=True), self.eps))
-        norms = np.maximum(np.tile(self_prods, [1, len(vecs)]) * np.tile(diagonal_prod, [len(self_prods), 1]), self.eps)
-        cosines = inner_prods / np.sqrt(norms)
-        return cosines
-
-    def log_l2_similarity_vecs(self, vocab_representation, vecs):
-        inner_prods = np.log(np.maximum(self.C * vocab_representation.dot(vecs.T), self.eps))
-        diagonal_prod = np.log(np.maximum(self.C * np.sum(vecs * vecs, axis=1), self.eps))
-        self_prods = np.log(np.maximum(self.C * np.sum(vocab_representation * vocab_representation, axis=1, keepdims=True), self.eps))
-        l2 = -(-2 * inner_prods + np.tile(self_prods, [1, len(vecs)]) + np.tile(diagonal_prod, [len(self_prods), 1]))
-        return l2
 
     def cosine_similarity_vecs(self, vocab_representation, vecs):
         normalized_vocab_repr = vocab_representation / np.maximum(norm(vocab_representation, axis=1, keepdims=True), self.eps)
@@ -102,14 +62,12 @@ def main():
     vecs_list = {
         "Unscaled": partial(embs.get_rep, vecs=embs.vecs),
         "CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
-        "Deepwalk": partial(embs.get_rep, vecs=embs.deepwalk_vecs)
+        "Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
     }
 
     sim_fun_list = {
         "Cos": embs.cosine_similarity,
-        "L2": embs.l2_similarity,
-        "LogCos": embs.log_cosine_similarity,
-        "LogL2": embs.log_l2_similarity
+        "L2": embs.l2_similarity
     }
 
     ws_datasets_dir = args["<ws_datasets_dir>"]
@@ -118,7 +76,7 @@ def main():
     results = {}
 
     for dataset in ws_datasets:
-        data = read_ws_test_set(os.path.join(ws_datasets_dir, dataset))
+        data = read_ws_test_set(os.path.join(ws_datasets_dir, dataset), embs.wi)
 
         for sim_name, sim_fun in sim_fun_list.items():
             for get_name, gen_fun in vecs_list.items():
@@ -130,43 +88,25 @@ def main():
     vecs_list = {
         "Unscaled": embs.vecs,
         "CommuteTime": embs.commute_time_vecs,
-        "Deepwalk": embs.deepwalk_vecs
+        "Sqrt": embs.sqrt_vecs
     }
 
     sim_fun_list = {
         "Cos": embs.cosine_similarity_vecs,
-        "L2": embs.l2_similarity_vecs,
-        # "LogCos": embs.log_cosine_similarity_vecs,
-        # "LogL2": embs.log_l2_similarity_vecs
+        "L2": embs.l2_similarity_vecs
     }
 
     analogy_datasets_dir = args["<analogy_datasets_dir>"]
     analogy_datasets = os.listdir(analogy_datasets_dir)
 
     for dataset in analogy_datasets:
-        data = read_analogy_test_set(os.path.join(analogy_datasets_dir, dataset))
+        data = read_analogy_test_set(os.path.join(analogy_datasets_dir, dataset), embs.wi)
         xi, ix = get_vocab(data)
 
         for sim_name, sim_fun in sim_fun_list.items():
             for get_name, vecs in vecs_list.items():
                 sims = prepare_similarities(vecs, embs.wi, ix, sim_fun)
                 accuracy_add, accuracy_mul = evaluate_analogy(sims, embs.wi, embs.iw, xi, data)
-
-                # total_score = 0
-                # batch_size = 2000
-                # for batch_first_example in range(0, len(data), batch_size):
-                #     data_batch = data[batch_first_example:min(len(data), batch_first_example+batch_size)]
-                #     print("batch %d %d" % (batch_first_example, min(len(data), batch_first_example+batch_size)))
-                #
-                #     print("computing query vecs")
-                #     query_vecs, expected_result = prepare_new_vecs(vecs, data_batch, embs.wi)
-                #     print("computing similarities to query vecs")
-                #     sims = sim_fun(query_vecs, vecs)
-                #     score = evaluate_analogy2(sims, data_batch, expected_result, embs.wi)
-                #     total_score += score
-                #
-                # accuracy_add = total_score / len(data)
-                # accuracy_mul = 0
 
                 res_name = "_".join([dataset, sim_name, get_name])
                 results[res_name] = (accuracy_add, accuracy_mul)
@@ -175,12 +115,13 @@ def main():
     pickle.dump(results, open(input_path + ".res", "wb"))
 
 
-def read_ws_test_set(path):
+def read_ws_test_set(path, wi):
     test = []
     with open(path) as f:
         for line in f:
             x, y, sim = line.strip().lower().split()
-            test.append(((x, y), float(sim)))
+            if x in wi and y in wi:
+                test.append(((x, y), float(sim)))
     return test
 
 
@@ -194,12 +135,14 @@ def evaluate_ws(sim_fun, get_fun, data):
     return spearmanr(actual, expected)[0]
 
 
-def read_analogy_test_set(path):
+def read_analogy_test_set(path, wi):
     test = []
     with open(path) as f:
         for line in f:
             analogy = line.strip().lower().split()
-            test.append(analogy)
+            found_in_vocab = len(set(analogy).intersection(wi.keys()))
+            if found_in_vocab == len(analogy):
+                test.append(analogy)
     return test
 
 
@@ -255,9 +198,7 @@ def prepare_similarities(vecs, wi, vocab, sim_fun):
     sims = sim_fun(vocab_representation, vecs)
     sims = (sims+1) / 2
     # sims -= np.min(sims)
-    # sims /= np.max(sims) * 3.0
-    # sims += 1.0 - 1.0/3.0
-
+    # sims /= np.max(sims)
     return sims
 
 
