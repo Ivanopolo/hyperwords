@@ -140,8 +140,8 @@ def read_analogy_test_set(path, wi):
     with open(path) as f:
         for line in f:
             analogy = line.strip().lower().split()
-            found_in_vocab = len(set(analogy).intersection(wi.keys()))
-            if found_in_vocab == len(analogy):
+            found_words = [w for w in analogy if w in wi]
+            if len(found_words) == len(analogy):
                 test.append(analogy)
     return test
 
