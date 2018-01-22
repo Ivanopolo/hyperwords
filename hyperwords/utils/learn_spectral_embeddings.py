@@ -20,6 +20,7 @@ def main():
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
         --pmi              Turn adjacency matrix into PMI-based adjacency matrix
         --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
+        --largest          Find largest eigenvalues
     """)
 
     start = time.time()
@@ -76,8 +77,9 @@ def main():
     print("Solving for eigenvectors and eigenvalues, %f" % time.time())
     max_iter = int(args["--max_iter"])
     verbosity = int(args["--verbosity"])
+    largest = args["--largest"]
 
-    vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
+    vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=largest, verbosityLevel=verbosity)
 
     postfix = "_%s_pow=%.2f_dim=%d" % (type_of_laplacian, power, dim)
     output_path = args["<output_path>"] + postfix

@@ -12,8 +12,6 @@ Ideas for tuning / speeding-up:
 2/ Preconditioners - max-weight spanning tree or forest
 3/ Less precision
 
-
-
 export OUTPUT_DIR=/Users/i.lobov/hyperwords/data/wiki
 export CORPUS=wikipedia.corpus.nodups
 bash scripts/clean_corpus.sh $OUTPUT_DIR/$CORPUS > $OUTPUT_DIR/$CORPUS.clean
@@ -39,7 +37,7 @@ python -m hyperwords.utils.learn_spectral_embeddings --pow 0.0 --verbosity 1 /Us
 
 ### Evaluate on word similarity task
 
-python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_highest_prec_symmetric_normalized_pow=0.00_dim=501 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_symmetric_normalized_largest_pow=0.00_dim=500 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
 
 
