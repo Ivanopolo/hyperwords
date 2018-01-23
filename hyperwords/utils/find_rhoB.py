@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse
 from docopt import docopt
 from scipy.sparse import load_npz
-from scipy.sparse.linalg import eigsh
+from scipy.sparse.linalg import eigsh, minres, LinearOperator
 
 
 def main():
@@ -43,8 +43,13 @@ def main():
         print("Building matrices")
         BH = buildBH(rhoB)
         BHprime = buildBHprime(rhoB)
+        
+        sigma = 0
+        op_inverse = lambda v: minres(BH, v, tol=1e-5)
+        OPinv = LinearOperator((n,n), matvec=op_inverse)
+
         print("Solving the eigenproblem")
-        mu, x = eigsh(A=BH, M=BHprime, k=1, which='SM')
+        mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
         print("mu is %f" % mu)
         err = abs(mu)
         rhoB -= mu
