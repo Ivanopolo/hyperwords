@@ -17,6 +17,7 @@ def main():
     print("Loading adjacency matrix, %f" % time.time())
     adjacency_matrix_path = args["<adjacency_matrix_path>"]
     adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
+    adjacency_matrix.data = adjacency_matrix.data ** 0.0
 
     n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
