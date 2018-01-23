@@ -6,6 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
+import tools
 from ..representations.matrix_serializer import load_vocabulary
 
 
@@ -72,14 +73,8 @@ def main():
         L = D_inv_sqrt.dot(L.dot(D_inv_sqrt))
         init[:, 0] = degrees_sqrt
     elif type_of_laplacian == "bethe_hessian":
-        I = scipy.sparse.eye(n, format='csr')
-        # r = np.sqrt(degrees.mean())
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
-        # L = (r ** 2 - 1) * I - r * adjacency_matrix + D
-        positive_correction = np.max(degrees)*(r-1)
-        L = D - r * adjacency_matrix + I * positive_correction
-        preconditioner = scipy.sparse.spdiags(1.0 / (degrees + positive_correction), [0], n, n, format='csr')
-        print("Number of rows that sum up to less than 0: %d" % (L.sum(axis=1) < 0).sum())
+        L = tools.build_weighted_bethe_hessian(adjacency_matrix, r)
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
@@ -89,11 +84,11 @@ def main():
 
     if type_of_laplacian == "bethe_hessian":
         ### Lanzcos algorithm for Bethe Hessian
-        # tol = np.sqrt(1e-15) * n
-        # vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+        tol = np.sqrt(1e-15) * n
+        vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
 
         ### LOBPCG learning
-        vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
+        # vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
     else:
         ### LOBPCG learning
         vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
