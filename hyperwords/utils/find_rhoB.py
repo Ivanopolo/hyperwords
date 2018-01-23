@@ -50,6 +50,7 @@ def main():
 
         print("Solving the eigenproblem")
         mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
+        mu = mu[0]
         print("mu is %f" % mu)
         err = abs(mu)
         rhoB -= mu
