@@ -75,7 +75,9 @@ def main():
         I = scipy.sparse.eye(n, format='csr')
         # r = np.sqrt(degrees.mean())
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
-        L = (r ** 2 - 1) * I - r * adjacency_matrix + D
+        # L = (r ** 2 - 1) * I - r * adjacency_matrix + D
+        L = D - r * adjacency_matrix + I * (np.max(degrees)*r - r)
+        print("Number of rows that sum up to less than 0: %d" % (L.sum(axis=1) < 0).sum())
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
@@ -85,8 +87,11 @@ def main():
 
     if type_of_laplacian == "bethe_hessian":
         ### Lanzcos algorithm for Bethe Hessian
-        tol = np.sqrt(1e-15) * n
-        vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+        # tol = np.sqrt(1e-15) * n
+        # vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+
+        ### LOBPCG learning
+        vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
     else:
         ### LOBPCG learning
         vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
