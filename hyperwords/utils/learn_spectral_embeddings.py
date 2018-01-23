@@ -6,7 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
-import tools
+import utils.tools
 from ..representations.matrix_serializer import load_vocabulary
 
 
@@ -74,7 +74,7 @@ def main():
         init[:, 0] = degrees_sqrt
     elif type_of_laplacian == "bethe_hessian":
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
-        L = tools.build_weighted_bethe_hessian(adjacency_matrix, r)
+        L = utils.tools.build_weighted_bethe_hessian(adjacency_matrix, r)
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
