@@ -45,8 +45,8 @@ def main():
         BHprime = buildBHprime(rhoB)
 
         sigma = 0
-        op_inverse = lambda v: minres(BH, v, tol=1e-5)
-        OPinv = LinearOperator(matvec=op_inverse[0], shape=adjacency_matrix.shape, dtype=np.float64)
+        op_inverse = lambda v: minres(BH, v, tol=1e-5)[0]
+        OPinv = LinearOperator(matvec=op_inverse, shape=adjacency_matrix.shape, dtype=np.float64)
 
         print("Solving the eigenproblem")
         mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
