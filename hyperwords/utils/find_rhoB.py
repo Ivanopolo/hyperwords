@@ -13,6 +13,12 @@ def main():
         find_rhoB.py [options] <adjacency_matrix_path>
     """)
 
+    '''
+    Using SLP algorithm to estimate second eigenvalue of the non-backtracking operator
+    See for reference: https://arxiv.org/pdf/1406.1880.pdf
+    And MATLAB implementation: http://mode_net.krzakala.org/
+    '''
+
     start = time.time()
     print("Loading adjacency matrix, %f" % time.time())
     adjacency_matrix_path = args["<adjacency_matrix_path>"]
@@ -31,7 +37,7 @@ def main():
         return 2 * r * I - adjacency_matrix
 
     guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
-    errtol = 1e-10
+    errtol = 1e-2
     maxIter = 10
 
     err = 1
