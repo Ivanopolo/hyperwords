@@ -76,7 +76,9 @@ def main():
         # r = np.sqrt(degrees.mean())
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
         # L = (r ** 2 - 1) * I - r * adjacency_matrix + D
-        L = D - r * adjacency_matrix + I * (np.max(degrees)*r - r)
+        positive_correction = np.max(degrees)*r - r
+        L = D - r * adjacency_matrix + I * positive_correction
+        preconditioner = scipy.sparse.spdiags(1.0 / (degrees + positive_correction), [0], n, n, format='csr')
         print("Number of rows that sum up to less than 0: %d" % (L.sum(axis=1) < 0).sum())
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
