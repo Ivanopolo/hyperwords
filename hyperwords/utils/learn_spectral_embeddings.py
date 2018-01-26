@@ -6,7 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
-from ..utils.tools import build_weighted_bethe_hessian
+from ..utils.tools import build_weighted_bethe_hessian, estimate_rhoB
 from ..representations.matrix_serializer import load_vocabulary
 
 
@@ -23,6 +23,7 @@ def main():
         --pmi              Turn adjacency matrix into PMI-based adjacency matrix
         --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
         --scale_weights    Scale weights of the adjacency matrix between 0 and 1
+        --tune_rhoB        Solve quadratic eigenproblem to find better rhoB estimation
     """)
 
     start = time.time()
@@ -79,6 +80,10 @@ def main():
         init[:, 0] = degrees_sqrt
     elif type_of_laplacian == "bethe_hessian":
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
+
+        if args["--tune_rhoB"]:
+            r = np.sqrt(estimate_rhoB(adjacency_matrix))
+
         L = build_weighted_bethe_hessian(adjacency_matrix, r)
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)

@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.sparse
+from scipy.sparse.linalg import minres, LinearOperator, eigsh
 
 
-### Correct
 def build_weighted_bethe_hessian(adjacency_matrix, r):
     A = adjacency_matrix.copy()
     n = A.shape[0]
@@ -16,17 +16,6 @@ def build_weighted_bethe_hessian(adjacency_matrix, r):
 
     A.data = dt
     Hr = D - A
-    return Hr
-
-
-### Correct
-def build_weighted_bethe_hessian_direct(adjacency_matrix, r):
-    A = adjacency_matrix.copy()
-    n = A.shape[0]
-    I = scipy.sparse.eye(n, format='csr')
-    degrees = np.asarray(A.sum(axis=1), dtype=np.float64).flatten()
-    D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
-    Hr = I + D / (r**2-1) - r/(r**2-1) * A
     return Hr
 
 
@@ -46,11 +35,34 @@ def build_weighted_bethe_hessian_derivative(adjacency_matrix, r):
     Hr_prime = D - A
     return Hr_prime
 
-### Correct
-def build_weighted_bethe_hessian_derivative_direct(adjacency_matrix, r):
-    A = adjacency_matrix.copy()
-    n = A.shape[0]
-    degrees = np.asarray(A.sum(axis=1), dtype=np.float64).flatten()
-    D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
-    Hr_prime = - 2*r / (r**2 - 1)**2 * D + (r**2 + 1) / (r**2 - 1)**2 * A
-    return Hr_prime
+
+def estimate_rhoB(adjacency_matrix):
+    print("Tuning rhoB estimation")
+    degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
+    guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
+    errtol = 1e-2
+    maxIter = 10
+
+    err = 1
+    iteration = 0
+    rhoB = guessForFirstEigen
+    print("Initial guess of rhoB is %f" % rhoB)
+    while err > errtol and iteration < maxIter:
+        iteration += 1
+        print("Building matrices")
+        BH = build_weighted_bethe_hessian(adjacency_matrix, rhoB)
+        BHprime = build_weighted_bethe_hessian_derivative(adjacency_matrix, rhoB)
+
+        sigma = 0
+        op_inverse = lambda v: minres(BH, v, tol=1e-5)[0]
+        OPinv = LinearOperator(matvec=op_inverse, shape=adjacency_matrix.shape, dtype=np.float64)
+
+        print("Solving the eigenproblem")
+        mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
+        mu = mu[0]
+        print("mu is %f" % mu)
+        err = abs(mu)
+        rhoB -= mu
+        print("Iteration %d, updated value of rhoB %f" % (iteration, rhoB))
+
+    return rhoB

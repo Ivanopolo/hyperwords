@@ -1,13 +1,9 @@
 import time
 
-import numpy as np
-import scipy.sparse
 from docopt import docopt
 from scipy.sparse import load_npz
-from scipy.sparse.linalg import eigsh, minres, LinearOperator
 
-from ..utils.tools import build_weighted_bethe_hessian, build_weighted_bethe_hessian_derivative, \
-    build_weighted_bethe_hessian_derivative_direct
+from ..utils.tools import estimate_rhoB
 
 
 def main():
@@ -26,35 +22,9 @@ def main():
     print("Loading adjacency matrix, %f" % time.time())
     adjacency_matrix_path = args["<adjacency_matrix_path>"]
     adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
-    adjacency_matrix.data = adjacency_matrix.data ** 0.0
+    adjacency_matrix.data = adjacency_matrix.data
 
-    degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
-    guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
-    errtol = 1e-2
-    maxIter = 10
-
-    err = 1
-    iteration = 0
-    rhoB = guessForFirstEigen
-    print("Initial guess is %f" % rhoB)
-    while err > errtol and iteration < maxIter:
-        iteration += 1
-        print("Building matrices")
-        BH = build_weighted_bethe_hessian(adjacency_matrix, rhoB)
-        BHprime = build_weighted_bethe_hessian_derivative(adjacency_matrix, rhoB)
-
-        sigma = 0
-        op_inverse = lambda v: minres(BH, v, tol=1e-5)[0]
-        OPinv = LinearOperator(matvec=op_inverse, shape=adjacency_matrix.shape, dtype=np.float64)
-
-        print("Solving the eigenproblem")
-        mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
-        mu = mu[0]
-        print("mu is %f" % mu)
-        err = abs(mu)
-        rhoB -= mu
-        print("updated value of rhoB %f" % rhoB)
-        print(err, iteration)
+    _ = estimate_rhoB(adjacency_matrix)
 
     print("Time elapsed %f" % (time.time() - start))
 
