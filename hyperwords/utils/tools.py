@@ -40,7 +40,7 @@ def estimate_rhoB(adjacency_matrix):
     print("Tuning rhoB estimation")
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
     guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
-    errtol = 1e-2
+    errtol = 1e-3
     maxIter = 10
 
     err = 1
@@ -61,8 +61,8 @@ def estimate_rhoB(adjacency_matrix):
         mu, x = eigsh(A=BH, M=BHprime, k=1, which='LM', sigma=sigma, OPinv=OPinv)
         mu = mu[0]
         print("mu is %f" % mu)
-        err = abs(mu)
+        err = abs(mu) / guessForFirstEigen
         rhoB -= mu
-        print("Iteration %d, updated value of rhoB %f" % (iteration, rhoB))
+        print("Iteration %d, updated value of rhoB %f, relative error %f" % (iteration, rhoB, err))
 
     return rhoB
