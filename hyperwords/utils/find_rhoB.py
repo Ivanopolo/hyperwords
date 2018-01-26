@@ -6,7 +6,8 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import eigsh, minres, LinearOperator
 
-from ..utils.tools import build_weighted_bethe_hessian, build_weighted_bethe_hessian_derivative
+from ..utils.tools import build_weighted_bethe_hessian, build_weighted_bethe_hessian_derivative, \
+    build_weighted_bethe_hessian_derivative_direct
 
 
 def main():
@@ -27,17 +28,7 @@ def main():
     adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
     adjacency_matrix.data = adjacency_matrix.data ** 0.0
 
-    n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
-    # D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
-    # I = scipy.sparse.eye(n, format='csr')
-
-    # def buildBH(r):
-    #     return (r ** 2 - 1) * I - r * adjacency_matrix + D
-    #
-    # def buildBHprime(r):
-    #     return 2 * r * I - adjacency_matrix
-
     guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
     errtol = 1e-2
     maxIter = 10
