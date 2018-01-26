@@ -6,6 +6,8 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import eigsh, minres, LinearOperator
 
+from ..utils.tools import build_weighted_bethe_hessian, build_weighted_bethe_hessian_derivative
+
 
 def main():
     args = docopt("""
@@ -27,14 +29,14 @@ def main():
 
     n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()
-    D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
-    I = scipy.sparse.eye(n, format='csr')
+    # D = scipy.sparse.spdiags(degrees, [0], n, n, format='csr')
+    # I = scipy.sparse.eye(n, format='csr')
 
-    def buildBH(r):
-        return (r ** 2 - 1) * I - r * adjacency_matrix + D
-
-    def buildBHprime(r):
-        return 2 * r * I - adjacency_matrix
+    # def buildBH(r):
+    #     return (r ** 2 - 1) * I - r * adjacency_matrix + D
+    #
+    # def buildBHprime(r):
+    #     return 2 * r * I - adjacency_matrix
 
     guessForFirstEigen = (degrees ** 2).mean() / degrees.mean() - 1
     errtol = 1e-2
@@ -47,8 +49,8 @@ def main():
     while err > errtol and iteration < maxIter:
         iteration += 1
         print("Building matrices")
-        BH = buildBH(rhoB)
-        BHprime = buildBHprime(rhoB)
+        BH = build_weighted_bethe_hessian(adjacency_matrix, rhoB)
+        BHprime = build_weighted_bethe_hessian_derivative(adjacency_matrix, rhoB)
 
         sigma = 0
         op_inverse = lambda v: minres(BH, v, tol=1e-5)[0]

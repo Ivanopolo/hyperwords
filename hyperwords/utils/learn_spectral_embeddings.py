@@ -22,6 +22,7 @@ def main():
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
         --pmi              Turn adjacency matrix into PMI-based adjacency matrix
         --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
+        --scale_weights    Scale weights of the adjacency matrix between 0 and 1
     """)
 
     start = time.time()
@@ -34,6 +35,10 @@ def main():
         adjacency_matrix.data = adjacency_matrix.data**power
     elif power > 1.0 or power < 0.0:
         raise NotImplementedError("We accept only power in [0,1] and it is %f" % power)
+
+    if args["--scale_weights"]:
+        print("Scaling weights of the adjacency matrix")
+        adjacency_matrix.data /= np.max(adjacency_matrix.data)
 
     n = adjacency_matrix.shape[0]
     degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten()

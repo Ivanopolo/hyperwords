@@ -1,0 +1,20 @@
+X-Laplacian vs Laplacian
+
+Dims=50, weight^0.0
+
+Without tuning
+bruni_men.txt_Cos_Unscaled ~0.40 
+
+X-Laplacian tuned Normalized Laplacian
+bruni_men.txt_Cos_Unscaled 0.422943064295
+luong_rare.txt_Cos_Unscaled -0.0106288755271
+radinsky_mturk.txt_Cos_Unscaled 0.555930204901
+ws353.txt_Cos_Unscaled 0.393904033467
+ws353_relatedness.txt_Cos_Unscaled 0.357289822736
+ws353_similarity.txt_Cos_Unscaled 0.431505415031
+google.txt_Cos_Unscaled 0.1063454148925122 0.07866860525495897
+msr.txt_Cos_Unscaled 0.06546782804158471 0.03751053666760326
+
+
+
+
