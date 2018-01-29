@@ -127,7 +127,7 @@ def main():
                 sims = prepare_similarities(vecs, embs.wi, ix, sim_fun)
 
                 if args["--with_ci"]:
-                    n_boots = int(args["--n_bootstraps"]) // 10
+                    n_boots = int(args["--n_bootstraps"]) // 3
                     resampled_accuracy_add = []
                     resampled_accuracy_mul = []
 
