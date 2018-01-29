@@ -5,6 +5,7 @@ from scipy.stats import spearmanr
 import os
 import pickle
 from functools import partial
+from sklearn.utils import resample
 
 from ..representations.matrix_serializer import load_vocabulary
 
@@ -15,7 +16,6 @@ class SpectralEvaluator(object):
         self.wi = wi
         self.iw = iw
         self.vecs = np.load(input_path + ".vecs.npy")
-        print(self.vecs.shape, len(wi))
         self.degrees = np.load(input_path + ".degrees.npy")
         vals = np.abs(np.load(input_path + ".vals.npy"))
 
@@ -49,10 +49,18 @@ class SpectralEvaluator(object):
         return - (-2*inner_prods + np.tile(diagonal_prod, [len(self_prods), 1]) + np.tile(self_prods, [1, len(vecs)]))
 
 
+def compute_confidence_intervals(results, alpha=5):
+    return np.mean(results), np.percentile(results, 100-alpha), np.percentile(results, alpha)
+
+
 def main():
     args = docopt("""
     Usage:
-        eval_all.py <spectral_embeddings_path> <ws_datasets_dir> <analogy_datasets_dir>
+        eval_all.py [options] <spectral_embeddings_path> <ws_datasets_dir> <analogy_datasets_dir>
+        
+        Options:
+        --with_ci              Output confidence interval (takes way longer to evaluate)
+        --n_bootstraps NUM     Number of bootstraps [default: 100]
     """)
 
     input_path = args["<spectral_embeddings_path>"]
@@ -61,8 +69,8 @@ def main():
 
     vecs_list = {
         "Unscaled": partial(embs.get_rep, vecs=embs.vecs),
-        "CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
-        "Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
+        #"CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
+        #"Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
     }
 
     sim_fun_list = {
@@ -80,15 +88,26 @@ def main():
 
         for sim_name, sim_fun in sim_fun_list.items():
             for get_name, gen_fun in vecs_list.items():
-                correlation = evaluate_ws(sim_fun, gen_fun, data)
+                if args["--with_ci"]:
+                    n_boots = int(args["--n_bootstraps"])
+                    resampled_correlation = []
+
+                    for _ in range(n_boots):
+                        re_sampled_data = resample(data)
+                        correlation = evaluate_ws(sim_fun, gen_fun, re_sampled_data)
+                        resampled_correlation.append(correlation)
+
+                    correlation = compute_confidence_intervals(resampled_correlation)
+                else:
+                    correlation = evaluate_ws(sim_fun, gen_fun, data)
                 res_name = "_".join([dataset, sim_name, get_name])
                 results[res_name] = correlation
                 print(res_name, correlation)
 
     vecs_list = {
         "Unscaled": embs.vecs,
-        "CommuteTime": embs.commute_time_vecs,
-        "Sqrt": embs.sqrt_vecs
+        #"CommuteTime": embs.commute_time_vecs,
+        #"Sqrt": embs.sqrt_vecs
     }
 
     sim_fun_list = {
@@ -106,7 +125,22 @@ def main():
         for sim_name, sim_fun in sim_fun_list.items():
             for get_name, vecs in vecs_list.items():
                 sims = prepare_similarities(vecs, embs.wi, ix, sim_fun)
-                accuracy_add, accuracy_mul = evaluate_analogy(sims, embs.wi, embs.iw, xi, data)
+
+                if args["--with_ci"]:
+                    n_boots = int(args["--n_bootstraps"]) // 10
+                    resampled_accuracy_add = []
+                    resampled_accuracy_mul = []
+
+                    for i in range(n_boots):
+                        re_sampled_data = resample(data)
+                        accuracy_add, accuracy_mul = evaluate_analogy(sims, embs.wi, embs.iw, xi, re_sampled_data)
+                        resampled_accuracy_add.append(accuracy_add)
+                        resampled_accuracy_mul.append(accuracy_mul)
+
+                    accuracy_add = compute_confidence_intervals(resampled_accuracy_add)
+                    accuracy_mul = compute_confidence_intervals(resampled_accuracy_mul)
+                else:
+                    accuracy_add, accuracy_mul = evaluate_analogy(sims, embs.wi, embs.iw, xi, data)
 
                 res_name = "_".join([dataset, sim_name, get_name])
                 results[res_name] = (accuracy_add, accuracy_mul)

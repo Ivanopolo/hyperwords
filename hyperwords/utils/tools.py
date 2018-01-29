@@ -7,8 +7,8 @@ def build_weighted_bethe_hessian(adjacency_matrix, r):
     A = adjacency_matrix.copy()
     n = A.shape[0]
 
-    dt = A.data.copy() * r
-    dt /= r ** 2 - A.data.copy() ** 2
+    dt = A.data * r
+    dt /= r ** 2 - A.data ** 2
 
     A.data = A.data ** 2 / (r ** 2 - A.data ** 2)
     bethe_diagonal = 1 + np.asarray(A.sum(axis=1), dtype=np.float64).flatten()
@@ -23,7 +23,7 @@ def build_weighted_bethe_hessian_derivative(adjacency_matrix, r):
     A = adjacency_matrix.copy()
     n = A.shape[0]
 
-    w = A.data.copy()
+    w = A.data
     dt = - w * (r ** 2 + w ** 2)
     dt /= (r ** 2 - w ** 2) ** 2
 

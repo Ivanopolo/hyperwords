@@ -39,9 +39,11 @@ python -m hyperwords.utils.learn_spectral_embeddings --pow 0.0 --verbosity 1 /Us
 
 ### Evaluate on word similarity task
 
-python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1.adj
+python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1
 
-python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_pmi_pow=0.30_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+python -m hyperwords.utils.test_derivative /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1
+
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_scaled2_pow=0.30_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
 
 

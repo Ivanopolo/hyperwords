@@ -3,3 +3,5 @@ data
 .idea
 .ipynb_checkpoints
 hyperwords/*/__*
+.DS_Store
+*/.DS_Store
