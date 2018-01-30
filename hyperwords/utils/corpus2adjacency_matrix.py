@@ -19,7 +19,7 @@ def main():
     thr = int(args['--thr'])
     win = int(args['--win'])
 
-    wi = read_vocab(corpus_file, thr)
+    wi, w2count = read_vocab(corpus_file, thr)
     n = len(wi)
     pair_counts = defaultdict(int)
 
@@ -66,6 +66,12 @@ def main():
     output_file_name = corpus_file + "_win=%d.adjacency" % win
     save_npz(output_file_name, adjacency_matrix)
 
+    output_vocab_name = corpus_file + "_win=%d.words.vocab" % win
+
+    with open(output_vocab_name, "w") as f:
+        for word in sorted(wi, key=wi.get, reverse=False):
+            f.write("%s, %d\n" % (word, w2count[word]))
+
 
 def read_vocab(corpus_file, thr):
     vocab = Counter()
@@ -73,12 +79,12 @@ def read_vocab(corpus_file, thr):
         for line in f:
             vocab.update(Counter(line.strip().split()))
 
-    vocab = dict([(token, count) for token, count in vocab.items() if count >= thr])
+        w2count = dict([(token, count) for token, count in vocab.items() if count >= thr])
     wi = {}
 
-    for e, word in enumerate(sorted(vocab, key=vocab.get, reverse=True)):
+    for e, word in enumerate(sorted(w2count, key=w2count.get, reverse=True)):
         wi[word] = e
-    return wi
+    return wi, w2count
 
 
 if __name__ == '__main__':
