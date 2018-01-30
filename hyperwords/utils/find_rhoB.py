@@ -1,5 +1,6 @@
 import time
 
+import numpy as np
 from docopt import docopt
 from scipy.sparse import load_npz
 
@@ -22,8 +23,9 @@ def main():
     print("Loading adjacency matrix, %f" % time.time())
     adjacency_matrix_path = args["<adjacency_matrix_path>"]
     adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
-    adjacency_matrix.data = adjacency_matrix.data
-
+    adjacency_matrix.data = adjacency_matrix.data ** 0.3
+    adjacency_matrix.data /= np.max(adjacency_matrix.data)
+    
     _ = estimate_rhoB(adjacency_matrix)
 
     print("Time elapsed %f" % (time.time() - start))
