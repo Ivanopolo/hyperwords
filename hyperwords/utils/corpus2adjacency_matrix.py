@@ -63,7 +63,7 @@ def main():
         data.append(value)
 
     adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
-    output_file_name = corpus_file + "win=%d.adjacency" % win
+    output_file_name = corpus_file + "_win=%d.adjacency" % win
     save_npz(output_file_name, adjacency_matrix)
 
 
@@ -76,9 +76,8 @@ def read_vocab(corpus_file, thr):
     vocab = dict([(token, count) for token, count in vocab.items() if count >= thr])
     wi = {}
 
-    for e, (word, count) in enumerate(sorted(vocab.items(), key=lambda k, v: (v, k))):
+    for e, word in enumerate(sorted(vocab, key=vocab.get, reverse=True)):
         wi[word] = e
-        print(word, count)
     return wi
 
 
