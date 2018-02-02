@@ -5,6 +5,7 @@ from scipy.stats import spearmanr
 import os
 import pickle
 from functools import partial
+from sklearn import mixture
 from sklearn.utils import resample
 
 from ..representations.matrix_serializer import load_vocabulary
@@ -49,8 +50,12 @@ class SpectralEvaluator(object):
         return - (-2*inner_prods + np.tile(diagonal_prod, [len(self_prods), 1]) + np.tile(self_prods, [1, len(vecs)]))
 
 
-def compute_confidence_intervals(results, alpha=5):
-    return np.mean(results), np.percentile(results, 100-alpha), np.percentile(results, alpha)
+def compute_confidence_intervals(results):
+    gmm = mixture.GaussianMixture(n_components=1, covariance_type='spherical')
+    gmm.fit(np.array(results).reshape(-1, 1))
+    mean = gmm.means_[0, 0]
+    ci_95 = 1.96 * np.sqrt(gmm.covariances_[0])
+    return mean, ci_95
 
 
 def main():
@@ -146,7 +151,10 @@ def main():
                 results[res_name] = (accuracy_add, accuracy_mul)
                 print(res_name, accuracy_add, accuracy_mul)
 
-    pickle.dump(results, open(input_path + ".res", "wb"))
+    if args["--with_ci"]:
+        pickle.dump(results, open(input_path + "_with_ci.res", "wb"))
+    else:
+        pickle.dump(results, open(input_path + ".res", "wb"))
 
 
 def read_ws_test_set(path, wi):

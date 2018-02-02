@@ -19,9 +19,12 @@ def main():
     thr = int(args['--thr'])
     win = int(args['--win'])
 
+    print("Building vocabulary V")
     wi, w2count = read_vocab(corpus_file, thr)
     n = len(wi)
-    pair_counts = defaultdict(int)
+    print("|V|=%d over threshold %d" % (n, thr))
+
+    pair_counts = defaultdict(float)
 
     with open(corpus_file) as f:
         for e, line in enumerate(f):
@@ -49,6 +52,7 @@ def main():
 
                                 pair_counts[key_pair] += 1
 
+    print("Building lists for adjacency matrix")
     data = []
     row_inds = []
     col_inds = []
@@ -62,7 +66,10 @@ def main():
         col_inds.append(idx_a)
         data.append(value)
 
+    print("Building adjacency matrix from lists of values and indices")
     adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
+
+    print("Writing the output")
     output_file_name = corpus_file + "_win=%d.adjacency" % win
     save_npz(output_file_name, adjacency_matrix)
 

@@ -32,7 +32,7 @@ word2vecf/word2vecf $WORD2VECF_OPTS -train $OUTPUT_DIR/wikipedia.corpus.nodups_p
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.words
 python hyperwords/text2numpy.py $OUTPUT_DIR/$OUTPUT_NAME.contexts
 
-python hyperwords/utils/corpus2window_counts.py --win 10 ./data/wiki/wiki.test
+python hyperwords/utils/corpus2adjacency_matrix.py --win 5 --thr 1 ./data/wiki/wiki.test
 
 
 python -m hyperwords.utils.learn_spectral_embeddings --pow 0.0 --verbosity 1 /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1 symmetric_normalized /Users/i.lobov/hyperwords/data/wiki/win=1_highest_prec
@@ -43,7 +43,7 @@ python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikiped
 
 python -m hyperwords.utils.test_derivative /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1
 
-python -m hyperwords.utils.eval_all --with_ci --n_bootstraps 300 /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_scaled2_pow=0.30_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_slepc_pow=0.3_dim=500 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
 
 
