@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.sparse
 from scipy.sparse.linalg import minres, LinearOperator, eigsh
+from petsc4py import PETSc
+from slepc4py import SLEPc
 
 
 def build_weighted_bethe_hessian(adjacency_matrix, r):
@@ -66,3 +68,67 @@ def estimate_rhoB(adjacency_matrix):
         print("Iteration %d, updated value of rhoB %f, relative error %f" % (iteration, rhoB, err))
 
     return rhoB
+
+
+class MatrixOperator(object):
+
+    def __init__(self, A):
+        self.A = A.astype(PETSc.ScalarType)
+        self.n_calls = 0
+
+    def mult(self, A, x, y):
+        xx = x.getArray(readonly=1)
+        yy = y.getArray(readonly=0)
+        yy[:] = self.A.dot(xx)
+        self.n_calls += 1
+
+
+def eigsh_slepc(A, k, tol, max_iter):
+
+    ### Setup matrix operator
+    n = A.shape[0]
+    mat = MatrixOperator(A)
+    A_operator = PETSc.Mat().createPython([n, n], mat)
+    A_operator.setUp()
+
+    ### Solve eigenproblem
+    E = SLEPc.EPS()
+    E.create()
+    E.setOperators(A_operator)
+    E.setProblemType(SLEPc.EPS.ProblemType.HEP)
+    E.setDimensions(k)
+    E.setTolerances(tol, max_iter)
+    E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
+    E.solve()
+    print("Number of calls to Ax: %d" % mat.n_calls)
+
+    ### Collect results
+    print("")
+    its = E.getIterationNumber()
+    print("Number of iterations of the method: %i" % its)
+    sol_type = E.getType()
+    print("Solution method: %s" % sol_type)
+    nev, ncv, mpd = E.getDimensions()
+    print("Number of requested eigenvalues: %i" % nev)
+    tol, maxit = E.getTolerances()
+    print("Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit))
+    nconv = E.getConverged()
+    print("Number of converged eigenpairs: %d" % nconv)
+    nconv = min(nconv, k)
+
+    if nconv < k:
+        raise ZeroDivisionError("Failed to converge for requested number of k with maxiter=%d" % max_iter)
+
+    vecs = np.zeros([n, nconv])
+    vals = np.zeros(nconv)
+
+    xr, tmp = A_operator.getVecs()
+    xi, tmp = A_operator.getVecs()
+
+    if nconv > 0:
+        for i in range(nconv):
+            k = E.getEigenpair(i, xr, xi)
+            vals[i] = k.real
+            vecs[:, i] = xr
+
+    return vals, vecs

@@ -6,7 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
-from ..utils.tools import build_weighted_bethe_hessian, estimate_rhoB
+from ..utils.tools import build_weighted_bethe_hessian, estimate_rhoB, eigsh_slepc
 from ..representations.matrix_serializer import load_vocabulary
 
 
@@ -17,6 +17,7 @@ def main():
 
     Options:
         --pow NUM          Every non-zero value in adjacency matrix will be scaled^{pow} [default: 1.0]
+        --tol NUM          Digits of relative precision for eigenvalue decomposition [default: 8]
         --max_iter NUM     Maximum number of iterations of LOBPCG algorithm [default: 100]
         --dim NUM          Number of eigen-pairs to return [default: 500]
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
@@ -94,8 +95,11 @@ def main():
 
     if type_of_laplacian == "bethe_hessian":
         ### Lanzcos algorithm for Bethe Hessian
-        tol = np.sqrt(1e-15) * n
-        vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+        digits_of_precision = int(args["--tol"])
+        tol = (1.0 / (10.0**digits_of_precision)) * n
+        print("Requested tolerance is %f" % tol)
+        #vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
+        eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
 
         ### LOBPCG learning
         # vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
