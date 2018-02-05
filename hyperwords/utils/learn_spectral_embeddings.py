@@ -95,8 +95,7 @@ def main():
 
     if type_of_laplacian == "bethe_hessian":
         ### Lanzcos algorithm for Bethe Hessian
-        digits_of_precision = int(args["--tol"])
-        tol = (1.0 / (10.0**digits_of_precision)) * n
+        tol = float(args["--tol"])
         print("Requested tolerance is %f" % tol)
         #vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
         vals, vecs = eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
