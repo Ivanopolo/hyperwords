@@ -1,26 +1,35 @@
 import numpy as np
+import time
 from collections import Counter, defaultdict
 
 from docopt import docopt
 from scipy.sparse import csr_matrix, save_npz
 
+from matrix_serializer import load_vocabulary
+
 
 def main():
     args = docopt("""
     Usage:
-        corpus2adjacency_matrix.py [options] <corpus>
+        corpus2adjacency_matrix.py [options] <corpus> <vocab>
 
     Options:
         --thr NUM    The minimal word count for being in the vocabulary [default: 100]
         --win NUM    Window size [default: 2]
     """)
 
+    start = time.time()
+
     corpus_file = args['<corpus>']
     thr = int(args['--thr'])
     win = int(args['--win'])
 
     print("Building vocabulary V")
-    wi, w2count = read_vocab(corpus_file, thr)
+    vocab_path = args["<vocab>"]
+    if vocab_path:
+        wi, _ = load_vocabulary(vocab_path)
+    else:
+        wi, _ = read_vocab(corpus_file, thr)
     n = len(wi)
     print("|V|=%d over threshold %d" % (n, thr))
 
@@ -77,7 +86,9 @@ def main():
 
     with open(output_vocab_name, "w") as f:
         for word in sorted(wi, key=wi.get, reverse=False):
-            f.write("%s, %d\n" % (word, w2count[word]))
+            f.write("%s\n" % word)
+
+    print("Time elapsed: %d" % (time.time() - start))
 
 
 def read_vocab(corpus_file, thr):
