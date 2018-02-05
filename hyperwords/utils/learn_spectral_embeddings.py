@@ -99,7 +99,7 @@ def main():
         tol = (1.0 / (10.0**digits_of_precision)) * n
         print("Requested tolerance is %f" % tol)
         #vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
-        eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
+        vals, vecs = eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
 
         ### LOBPCG learning
         # vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
