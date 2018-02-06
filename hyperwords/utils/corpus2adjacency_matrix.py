@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 
 from docopt import docopt
 
-from matrix_serializer import load_vocabulary
+from ..representations.matrix_serializer import load_vocabulary
 
 
 def main():
