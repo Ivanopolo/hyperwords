@@ -16,9 +16,9 @@ class SpectralEvaluator(object):
         wi, iw = load_vocabulary(input_path + ".words.vocab")
         self.wi = wi
         self.iw = iw
-        self.vecs = np.load(input_path + ".vecs.npy")
+        self.vecs = np.load(input_path + ".vecs.npy")[:,:500]
         self.degrees = np.load(input_path + ".degrees.npy")
-        vals = np.abs(np.load(input_path + ".vals.npy"))
+        vals = np.abs(np.load(input_path + ".vals.npy"))[:500]
 
         commute_time_eigenscaling = np.sqrt(1.0 / vals)
         self.commute_time_vecs = commute_time_eigenscaling * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
@@ -74,7 +74,7 @@ def main():
 
     vecs_list = {
         "Unscaled": partial(embs.get_rep, vecs=embs.vecs),
-        #"CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
+        "CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
         #"Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
     }
 
@@ -111,7 +111,7 @@ def main():
 
     vecs_list = {
         "Unscaled": embs.vecs,
-        #"CommuteTime": embs.commute_time_vecs,
+        "CommuteTime": embs.commute_time_vecs,
         #"Sqrt": embs.sqrt_vecs
     }
 

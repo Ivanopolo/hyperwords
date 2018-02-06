@@ -3,7 +3,6 @@ import time
 from collections import Counter, defaultdict
 
 from docopt import docopt
-from scipy.sparse import csr_matrix, save_npz
 
 from matrix_serializer import load_vocabulary
 
@@ -18,7 +17,7 @@ def main():
         --win NUM    Window size [default: 2]
     """)
 
-    start = time.time()
+    start_time = time.time()
 
     corpus_file = args['<corpus>']
     thr = int(args['--thr'])
@@ -75,12 +74,16 @@ def main():
         col_inds.append(idx_a)
         data.append(value)
 
-    print("Building adjacency matrix from lists of values and indices")
-    adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
-
-    print("Writing the output")
-    output_file_name = corpus_file + "_win=%d.adjacency" % win
-    save_npz(output_file_name, adjacency_matrix)
+    # print("Building adjacency matrix from lists of values and indices")
+    # adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
+    #
+    # print("Writing the output")
+    # output_file_name = corpus_file + "_win=%d.adjacency" % win
+    # save_npz(output_file_name, adjacency_matrix)
+    output_file_name = corpus_file + "_win=%d" % win
+    np.save(output_file_name + ".data", np.array(data))
+    np.save(output_file_name + ".row_inds", np.array(row_inds))
+    np.save(output_file_name + ".col_inds", np.array(col_inds))
 
     output_vocab_name = corpus_file + "_win=%d.words.vocab" % win
 
@@ -88,7 +91,7 @@ def main():
         for word in sorted(wi, key=wi.get, reverse=False):
             f.write("%s\n" % word)
 
-    print("Time elapsed: %d" % (time.time() - start))
+    print("Time elapsed: %d" % (time.time() - start_time))
 
 
 def read_vocab(corpus_file, thr):
