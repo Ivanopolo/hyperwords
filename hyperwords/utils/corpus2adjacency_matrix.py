@@ -8,7 +8,7 @@ from docopt import docopt
 def main():
     args = docopt("""
     Usage:
-        corpus2adjacency_matrix.py [options] <corpus> <vocab>
+        corpus2adjacency_matrix.py [options] <corpus>
 
     Options:
         --thr NUM    The minimal word count for being in the vocabulary [default: 100]
@@ -22,11 +22,7 @@ def main():
     win = int(args['--win'])
 
     print("Building vocabulary V")
-    vocab_path = args["<vocab>"]
-    if vocab_path:
-        wi, _ = load_vocabulary(vocab_path)
-    else:
-        wi, _ = read_vocab(corpus_file, thr)
+    wi, _ = read_vocab(corpus_file, thr)
     n = len(wi)
     print("|V|=%d over threshold %d" % (n, thr))
 
@@ -104,12 +100,6 @@ def read_vocab(corpus_file, thr):
     for e, word in enumerate(sorted(w2count, key=w2count.get, reverse=True)):
         wi[word] = e
     return wi, w2count
-
-
-def load_vocabulary(path):
-    with open(path) as f:
-        vocab = [line.strip().split(",")[0] for line in f if len(line) > 0]
-    return dict([(a, i) for i, a in enumerate(vocab)]), vocab
 
 
 if __name__ == '__main__':
