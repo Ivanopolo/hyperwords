@@ -4,8 +4,6 @@ from collections import Counter, defaultdict
 
 from docopt import docopt
 
-from ..representations.matrix_serializer import load_vocabulary
-
 
 def main():
     args = docopt("""
@@ -106,6 +104,12 @@ def read_vocab(corpus_file, thr):
     for e, word in enumerate(sorted(w2count, key=w2count.get, reverse=True)):
         wi[word] = e
     return wi, w2count
+
+
+def load_vocabulary(path):
+    with open(path) as f:
+        vocab = [line.strip().split(",")[0] for line in f if len(line) > 0]
+    return dict([(a, i) for i, a in enumerate(vocab)]), vocab
 
 
 if __name__ == '__main__':
