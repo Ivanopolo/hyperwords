@@ -33,40 +33,36 @@ def main():
             if e % 10 ** 6 == 0:
                 print("Line ", e)
 
-            tokens = [wi[t] if t in wi else None for t in line.strip().split()]
+            tokens = [wi[t] for t in line.strip().split() if t in wi]
             len_tokens = len(tokens)
 
             for i, tok in enumerate(tokens):
-                if tok is not None:
-                    start = i - win
-                    if start < 0:
-                        start = 0
-                    end = i + win + 1
-                    if end > len_tokens:
-                        end = len_tokens
+                end = i + win + 1
+                if end > len_tokens:
+                    end = len_tokens
 
-                    for j in range(start, end):
-                        if j != i and tokens[j] is not None:
-                            if tok < tokens[j]:
-                                key_pair = (tok, tokens[j])
-                            else:
-                                key_pair = (tokens[j], tok)
+                for j in range(i+1, end):
+                    if tok < tokens[j]:
+                        key_pair = (tok, tokens[j])
+                    else:
+                        key_pair = (tokens[j], tok)
 
-                                pair_counts[key_pair] += 1
+                        pair_counts[key_pair] += 1
 
     print("Building lists for adjacency matrix")
-    data = []
-    row_inds = []
-    col_inds = []
+    data = np.zeros(len(pair_counts) * 2, dtype=np.float32)
+    row_inds = np.zeros(len(pair_counts) * 2, dtype=np.int32)
+    col_inds = np.zeros(len(pair_counts) * 2, dtype=np.int32)
+    num_vals = len(pair_counts)
 
-    for (idx_a, idx_b), value in pair_counts.items():
-        row_inds.append(idx_a)
-        col_inds.append(idx_b)
-        data.append(value)
+    for i, ((idx_a, idx_b), value) in enumerate(pair_counts.items()):
+        row_inds[i] = idx_a
+        col_inds[i] = idx_b
+        data[i] = value
 
-        row_inds.append(idx_b)
-        col_inds.append(idx_a)
-        data.append(value)
+        row_inds[i + num_vals] = idx_b
+        col_inds[i + num_vals] = idx_a
+        data[i + num_vals] = value
 
     # print("Building adjacency matrix from lists of values and indices")
     # adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
@@ -75,9 +71,9 @@ def main():
     # output_file_name = corpus_file + "_win=%d.adjacency" % win
     # save_npz(output_file_name, adjacency_matrix)
     output_file_name = corpus_file + "_win=%d" % win
-    np.save(output_file_name + ".data", np.array(data))
-    np.save(output_file_name + ".row_inds", np.array(row_inds))
-    np.save(output_file_name + ".col_inds", np.array(col_inds))
+    np.savez(output_file_name + ".data", np.array(data))
+    np.savez(output_file_name + ".row_inds", np.array(row_inds))
+    np.savez(output_file_name + ".col_inds", np.array(col_inds))
 
     output_vocab_name = corpus_file + "_win=%d.words.vocab" % win
 
