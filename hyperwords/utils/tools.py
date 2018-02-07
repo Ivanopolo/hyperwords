@@ -17,8 +17,7 @@ def build_weighted_bethe_hessian(adjacency_matrix, r):
     D = scipy.sparse.spdiags(bethe_diagonal, [0], n, n, format='csr')
 
     A.data = dt
-    Hr = D - A
-    return Hr
+    return D, A
 
 
 def build_weighted_bethe_hessian_derivative(adjacency_matrix, r):
