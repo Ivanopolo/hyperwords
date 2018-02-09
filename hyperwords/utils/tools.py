@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse
+import time
 from scipy.sparse.linalg import minres, LinearOperator, eigsh
 from petsc4py import PETSc
 from slepc4py import SLEPc
@@ -81,10 +82,6 @@ class MatrixOperator(object):
         yy[:] = self.A.dot(xx)
         self.n_calls += 1
 
-
-def monitor_fun(eps, iters, nconv, eigs, errors):
-    print("Current iteration: %d, number of converged eigenvalues: %d" % (iters, nconv))
-
 def eigsh_slepc(A, k, tol, max_iter):
 
     ### Setup matrix operator
@@ -101,6 +98,14 @@ def eigsh_slepc(A, k, tol, max_iter):
     E.setDimensions(k)
     E.setTolerances(tol, max_iter)
     E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
+
+    current_time = time.time()
+    def monitor_fun(eps, iters, nconv, eigs, errors):
+        global current_time
+        print("Current iteration: %d, number of converged eigenvalues: %d" % (iters, nconv))
+        print("Time per iteration: %d" % (time.time() - current_time))
+        current_time = time.time()
+
     E.setMonitor(monitor_fun)
     E.solve()
     print("Number of calls to Ax: %d" % mat.n_calls)
