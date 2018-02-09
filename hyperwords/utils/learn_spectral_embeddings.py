@@ -50,8 +50,10 @@ def main():
         print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
         total_count = degrees.sum()
         D_inv = scipy.sparse.spdiags(1.0 / degrees, [0], n, n, format='csr')
-        adjacency_matrix = D_inv.dot(adjacency_matrix.dot(D_inv))
-        adjacency_matrix.data = np.maximum(np.log(adjacency_matrix.data * total_count) - np.log(neg), 0)
+        pmi_matrix = D_inv.dot(adjacency_matrix.dot(D_inv))
+        pmi_matrix.data = np.maximum(np.log(pmi_matrix.data * total_count) - np.log(neg), 0)
+        zeros_mask = pmi_matrix.data == 0
+        adjacency_matrix.data[zeros_mask] = 0
         adjacency_matrix.eliminate_zeros()
         degrees = np.asarray(adjacency_matrix.sum(axis=1), dtype=np.float64).flatten() #Update degrees
         print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
@@ -80,8 +82,8 @@ def main():
         L = D_inv_sqrt.dot(L.dot(D_inv_sqrt))
         init[:, 0] = degrees_sqrt
     elif type_of_laplacian == "bethe_hessian":
-        # r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
-        r = np.mean(adjacency_matrix.data**2)
+        r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
+        #r = np.mean(adjacency_matrix.data**2)
 
         if args["--tune_rhoB"]:
             r = np.sqrt(estimate_rhoB(adjacency_matrix))
@@ -90,7 +92,7 @@ def main():
         I = scipy.sparse.eye(n, format="csr")
         L = D - A + I * np.mean(degrees)
         preconditioner = D.copy()
-        preconditioner.data = 1.0 / (D.data + np.mean(degrees))
+        preconditioner.data = 1.0 / (D.data)
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 

@@ -43,7 +43,7 @@ python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikiped
 
 python -m hyperwords.utils.test_derivative /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1
 
-python -m hyperwords.utils.eval_all --with_ci /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_slepc_pow=0.3_dim=500 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_slepc_max_scaling_pow=0.3_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
 
 
