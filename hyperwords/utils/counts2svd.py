@@ -26,9 +26,9 @@ def main():
     cds = float(args['--cds'])
 
     _, iw = load_vocabulary(counts_path + '.words.vocab')
-    data = np.load(counts_path + ".data.npz")
-    row_inds = np.load(counts_path + ".row_inds.npz")
-    col_inds = np.load(counts_path + ".col_inds.npz")
+    data = np.load(counts_path + ".data.npz")["arr_0"]
+    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
+    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
     adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
 
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
