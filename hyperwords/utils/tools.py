@@ -95,6 +95,7 @@ def eigsh_slepc(A, k, tol, max_iter):
     E.create()
     E.setOperators(A_operator)
     E.setProblemType(SLEPc.EPS.ProblemType.HEP)
+    E.setType(SLEPc.EPS.Type.LANZCOS)
     E.setDimensions(k)
     E.setTolerances(tol, max_iter)
     E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
