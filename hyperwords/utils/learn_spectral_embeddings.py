@@ -17,7 +17,7 @@ def main():
 
     Options:
         --pow NUM          Every non-zero value in adjacency matrix will be scaled^{pow} [default: 1.0]
-        --tol NUM          Digits of relative precision for eigenvalue decomposition [default: 8]
+        --tol NUM          Digits of relative precision for eigenvalue decomposition [default: 0.01]
         --max_iter NUM     Maximum number of iterations of LOBPCG algorithm [default: 100]
         --dim NUM          Number of eigen-pairs to return [default: 500]
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
