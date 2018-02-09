@@ -63,9 +63,26 @@ class PositiveExplicit(Explicit):
     Positive PMI (PPMI) with negative sampling (neg).
     Negative samples shift the PMI matrix before truncation.
     """
-    
+
     def __init__(self, path, normalize=True, neg=1):
         Explicit.__init__(self, path, False)
+        self.m.data -= np.log(neg)
+        self.m.data[self.m.data < 0] = 0
+        self.m.eliminate_zeros()
+        if normalize:
+            self.normalize()
+
+
+class PositiveExplicitLoaded(Explicit):
+    """
+    Positive PMI (PPMI) with negative sampling (neg).
+    Negative samples shift the PMI matrix before truncation.
+    """
+
+    def __init__(self, pmi, normalize=True, neg=1):
+        self.m = pmi
+        self.m.data = np.log(self.m.data)
+
         self.m.data -= np.log(neg)
         self.m.data[self.m.data < 0] = 0
         self.m.eliminate_zeros()

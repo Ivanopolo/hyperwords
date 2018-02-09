@@ -43,7 +43,7 @@ python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikiped
 
 python -m hyperwords.utils.test_derivative /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1
 
-python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_weighted_bethe_hessian_slepc_max_scaling_pow=0.3_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_correctly_weighted_bethe_hessian_fast_slepc_pow=0.3_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
 
 
@@ -62,3 +62,6 @@ python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/e
 
 python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/analogy/google.txt
 python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/analogy/msr.txt
+
+
+./configure --with-cc=gcc --with-fc=gfortran --with-debugging=0 COPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -qarch=native -qtune=native'
