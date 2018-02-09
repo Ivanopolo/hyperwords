@@ -26,11 +26,7 @@ def main():
     cds = float(args['--cds'])
 
     _, iw = load_vocabulary(counts_path + '.words.vocab')
-    data = np.load(counts_path + ".data.npz")["arr_0"]
-    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
-    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
-    adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
-
+    adjacency_matrix = load_adjacency_matrix(counts_path)
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
     start = time.time()
@@ -40,6 +36,14 @@ def main():
     np.save(output_path + '.vecs.npy', ut.T)
     np.save(output_path + '.vals.npy', s)
     save_vocabulary(output_path + '.words.vocab', iw)
+
+
+def load_adjacency_matrix(counts_path):
+    data = np.load(counts_path + ".data.npz")["arr_0"]
+    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
+    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
+    adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
+    return adjacency_matrix
 
 
 def build_ppmi_matrix(adjacency_matrix, neg, cds):
@@ -55,7 +59,7 @@ def build_ppmi_matrix(adjacency_matrix, neg, cds):
     pmi = multiply_by_columns(adjacency_matrix, sum_c)
     pmi = pmi * sum_total
 
-    pmi.data = np.log(pmi.m.data)
+    pmi.data = np.log(pmi.data)
 
     pmi.data -= np.log(neg)
     pmi.data[pmi.data < 0] = 0

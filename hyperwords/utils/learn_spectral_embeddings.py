@@ -6,6 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
+from counts2svd import build_ppmi_matrix
 from ..utils.tools import build_weighted_bethe_hessian, estimate_rhoB, eigsh_slepc
 from ..representations.matrix_serializer import load_vocabulary
 
@@ -13,7 +14,7 @@ from ..representations.matrix_serializer import load_vocabulary
 def main():
     args = docopt("""
     Usage:
-        learn_spectral_embeddings.py [options] <adjacency_matrix_path> <type_of_laplacian> <output_path>
+        learn_spectral_embeddings.py [options] <counts_path> <type_of_laplacian> <output_path>
 
     Options:
         --pow NUM          Every non-zero value in adjacency matrix will be scaled^{pow} [default: 1.0]
@@ -29,9 +30,13 @@ def main():
 
     start = time.time()
     print("Loading adjacency matrix, %f" % time.time())
-    adjacency_matrix_path = args["<adjacency_matrix_path>"]
-    adjacency_matrix = load_npz(adjacency_matrix_path + ".adjacency.npz")
-    _, iw = load_vocabulary(adjacency_matrix_path + ".words.vocab")
+    counts_path = args["<counts_path>"]
+    data = np.load(counts_path + ".data.npz")["arr_0"]
+    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
+    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
+    adjacency_matrix = scipy.sparse.csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
+    _, iw = load_vocabulary(counts_path + ".words.vocab")
+
     power = float(args["--pow"])
     if power <= 1.0:
         adjacency_matrix.data = adjacency_matrix.data**power
@@ -48,10 +53,7 @@ def main():
         neg = int(args["--neg"])
         print("Building PMI matrix with negative sampling=%d" % neg)
         print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
-        total_count = degrees.sum()
-        D_inv = scipy.sparse.spdiags(1.0 / degrees, [0], n, n, format='csr')
-        pmi_matrix = D_inv.dot(adjacency_matrix.dot(D_inv))
-        pmi_matrix.data = np.maximum(np.log(pmi_matrix.data * total_count) - np.log(neg), 0)
+        pmi_matrix = build_ppmi_matrix(adjacency_matrix, cds=0.75, neg=neg)
         zeros_mask = pmi_matrix.data == 0
         adjacency_matrix.data[zeros_mask] = 0
         adjacency_matrix.eliminate_zeros()
