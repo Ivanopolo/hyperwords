@@ -99,12 +99,8 @@ def eigsh_slepc(A, k, tol, max_iter):
     E.setTolerances(tol, max_iter)
     E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
 
-    current_time = time.time()
     def monitor_fun(eps, iters, nconv, eigs, errors):
-        global current_time
         print("Current iteration: %d, number of converged eigenvalues: %d" % (iters, nconv))
-        print("Time per iteration: %d" % (time.time() - current_time))
-        current_time = time.time()
 
     E.setMonitor(monitor_fun)
     E.solve()
