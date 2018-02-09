@@ -16,13 +16,12 @@ class SpectralEvaluator(object):
         wi, iw = load_vocabulary(input_path + ".words.vocab")
         self.wi = wi
         self.iw = iw
-        self.vecs = np.load(input_path + ".vecs.npy")[:,:500]
-        self.degrees = np.load(input_path + ".degrees.npy")
-        vals = np.abs(np.load(input_path + ".vals.npy"))[:500]
+        self.vecs = np.load(input_path + ".vecs.npy")
+        vals = np.abs(np.load(input_path + ".vals.npy"))
 
         commute_time_eigenscaling = np.sqrt(1.0 / vals)
-        self.commute_time_vecs = commute_time_eigenscaling * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
-        self.sqrt_vecs = np.sqrt(vals) * self.vecs / np.expand_dims(np.sqrt(self.degrees), 1)
+        self.commute_time_vecs = commute_time_eigenscaling * self.vecs
+        self.sqrt_vecs = np.sqrt(vals) * self.vecs
         self.eps = 1e-6
 
     def get_rep(self, word, vecs):
@@ -35,19 +34,10 @@ class SpectralEvaluator(object):
         inner_product = x.dot(y)
         return inner_product / (max(norm(x) * norm(y), self.eps))
 
-    def l2_similarity(self, x, y):
-        return -np.mean((x - y)**2)
-
     def cosine_similarity_vecs(self, vocab_representation, vecs):
         normalized_vocab_repr = vocab_representation / np.maximum(norm(vocab_representation, axis=1, keepdims=True), self.eps)
         normalized_vecs = vecs / norm(vecs, axis=1, keepdims=True)
         return normalized_vocab_repr.dot(normalized_vecs.T)
-
-    def l2_similarity_vecs(self, vocab_representation, vecs):
-        inner_prods = vocab_representation.dot(vecs.T)
-        diagonal_prod = np.sum(vecs * vecs, axis=1)
-        self_prods = np.sum(vocab_representation * vocab_representation, axis=1, keepdims=True)
-        return - (-2*inner_prods + np.tile(diagonal_prod, [len(self_prods), 1]) + np.tile(self_prods, [1, len(vecs)]))
 
 
 def compute_confidence_intervals(results):
@@ -74,13 +64,12 @@ def main():
 
     vecs_list = {
         "Unscaled": partial(embs.get_rep, vecs=embs.vecs),
-        "CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
+        #"CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
         #"Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
     }
 
     sim_fun_list = {
-        "Cos": embs.cosine_similarity,
-        # "L2": embs.l2_similarity
+        "Cos": embs.cosine_similarity
     }
 
     ws_datasets_dir = args["<ws_datasets_dir>"]
@@ -111,13 +100,12 @@ def main():
 
     vecs_list = {
         "Unscaled": embs.vecs,
-        "CommuteTime": embs.commute_time_vecs,
+        #"CommuteTime": embs.commute_time_vecs,
         #"Sqrt": embs.sqrt_vecs
     }
 
     sim_fun_list = {
-        "Cos": embs.cosine_similarity_vecs,
-        # "L2": embs.l2_similarity_vecs
+        "Cos": embs.cosine_similarity_vecs
     }
 
     analogy_datasets_dir = args["<analogy_datasets_dir>"]

@@ -82,6 +82,9 @@ class MatrixOperator(object):
         self.n_calls += 1
 
 
+def monitor_fun(eps, iters, nconv, eigs, errors):
+    print("Current iteration: %d, number of converged eigenvalues: %d" % (iters, nconv))
+
 def eigsh_slepc(A, k, tol, max_iter):
 
     ### Setup matrix operator
@@ -98,6 +101,7 @@ def eigsh_slepc(A, k, tol, max_iter):
     E.setDimensions(k)
     E.setTolerances(tol, max_iter)
     E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
+    E.setMonitor(monitor_fun)
     E.solve()
     print("Number of calls to Ax: %d" % mat.n_calls)
 
@@ -108,7 +112,7 @@ def eigsh_slepc(A, k, tol, max_iter):
     sol_type = E.getType()
     print("Solution method: %s" % sol_type)
     nev, ncv, mpd = E.getDimensions()
-    print("Number of requested eigenvalues: %i" % nev)
+    print("NEV %d NCV %d MPD %d" % (nev, ncv, mpd))
     tol, maxit = E.getTolerances()
     print("Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit))
     nconv = E.getConverged()

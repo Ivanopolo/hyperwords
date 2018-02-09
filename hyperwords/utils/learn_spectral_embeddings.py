@@ -83,16 +83,12 @@ def main():
         init[:, 0] = degrees_sqrt
     elif type_of_laplacian == "bethe_hessian":
         r = np.sqrt((degrees ** 2).mean() / degrees.mean() - 1)
-        #r = np.mean(adjacency_matrix.data**2)
 
         if args["--tune_rhoB"]:
             r = np.sqrt(estimate_rhoB(adjacency_matrix))
 
         D, A = build_weighted_bethe_hessian(adjacency_matrix, r)
-        I = scipy.sparse.eye(n, format="csr")
-        L = D - A + I * np.mean(degrees)
-        preconditioner = D.copy()
-        preconditioner.data = 1.0 / (D.data)
+        L = D - A
     else:
         raise NotImplementedError("The type %s of laplacian is not implemented" % type_of_laplacian)
 
@@ -105,10 +101,10 @@ def main():
         tol = float(args["--tol"])
         print("Requested tolerance is %f" % tol)
         #vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
-        # vals, vecs = eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
+        vals, vecs = eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
 
         ### LOBPCG learning
-        vals, vecs = lobpcg(L, M=preconditioner, X=init[:, 1:], B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
+        # vals, vecs = lobpcg(L, M=preconditioner, X=init[:, 1:], B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
     else:
         ### LOBPCG learning
         vals, vecs = lobpcg(L, M=preconditioner, X=init, B=B, maxiter=max_iter, largest=False, verbosityLevel=verbosity)
