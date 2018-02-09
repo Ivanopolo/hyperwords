@@ -5,8 +5,8 @@ from docopt import docopt
 import numpy as np
 import time
 
-from representations.explicit import PositiveExplicitLoaded
-from representations.matrix_serializer import save_vocabulary
+from ..representations.explicit import PositiveExplicitLoaded
+from ..representations.matrix_serializer import save_vocabulary
 
 
 def main():
