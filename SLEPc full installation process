@@ -5,6 +5,10 @@ MPICH Installation
 make
 make install
 
+Optional:
+sudo apt-get install valgrind
+sudo apt-get install libblas-dev liblapack-dev
+
 PETSc Installation
 python2 ./configure --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-debugging=0 COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -qarch=native -qtune=native'
 make all test
