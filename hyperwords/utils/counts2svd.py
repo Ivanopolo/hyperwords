@@ -5,8 +5,7 @@ from docopt import docopt
 import numpy as np
 import time
 
-from ..representations.explicit import PositiveExplicitLoaded
-from ..representations.matrix_serializer import save_vocabulary
+from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
 
 def main():
@@ -26,24 +25,24 @@ def main():
     neg = int(args['--neg'])
     cds = float(args['--cds'])
 
+    _, iw = load_vocabulary(counts_path + '.words.vocab')
     data = np.load(counts_path + ".data.npz")
     row_inds = np.load(counts_path + ".row_inds.npz")
     col_inds = np.load(counts_path + ".col_inds.npz")
     adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
 
-    pmi = build_pmi_matrix(adjacency_matrix, cds)
-    explicit = PositiveExplicitLoaded(counts_path, pmi, normalize=False, neg=neg)
+    ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
     start = time.time()
-    ut, s, vt = sparsesvd(explicit.m.tocsc(), dim)
+    ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
     print("Time elapsed for SVD: %f" % (time.time() - start))
 
     np.save(output_path + '.vecs.npy', ut.T)
     np.save(output_path + '.vals.npy', s)
-    save_vocabulary(output_path + '.words.vocab', explicit.iw)
+    save_vocabulary(output_path + '.words.vocab', iw)
 
 
-def build_pmi_matrix(adjacency_matrix, cds):
+def build_ppmi_matrix(adjacency_matrix, neg, cds):
     sum_w = np.asarray(adjacency_matrix.sum(axis=1)).flatten()
     sum_c = sum_w.copy()
     sum_c = sum_c ** cds
@@ -55,6 +54,13 @@ def build_pmi_matrix(adjacency_matrix, cds):
     pmi = multiply_by_rows(adjacency_matrix, sum_w)
     pmi = multiply_by_columns(adjacency_matrix, sum_c)
     pmi = pmi * sum_total
+
+    pmi.data = np.log(pmi.m.data)
+
+    pmi.data -= np.log(neg)
+    pmi.data[pmi.data < 0] = 0
+    pmi.eliminate_zeros()
+
     return pmi
 
 
