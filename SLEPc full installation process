@@ -1,0 +1,23 @@
+SLEPc full installation process
+
+MPICH Installation
+./configure --enable-fast=all,O3
+make
+make install
+
+PETSc Installation
+python2 ./configure --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-debugging=0 COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -qarch=native -qtune=native'
+make all test
+
+SLEPc Installation
+python2 ./configure
+make
+make test
+
+petsc4py / slepc4py Installation
+export PETSC_DIR=/Users/i.lobov/petsc-3.8.3
+export PETSC_ARCH=PETSC_ARCH=arch-darwin-c-debug
+export SLEPC_DIR=/Users/i.lobov/slepc-3.8.2
+
+pip uninstall petsc4py slepc4py
+pip install --no-cache-dir petsc4py slepc4py

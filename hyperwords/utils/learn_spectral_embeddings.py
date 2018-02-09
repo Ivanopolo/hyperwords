@@ -3,7 +3,6 @@ import time
 import numpy as np
 import scipy.sparse
 from docopt import docopt
-from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
 from ..utils.counts2svd import build_ppmi_matrix, load_adjacency_matrix
