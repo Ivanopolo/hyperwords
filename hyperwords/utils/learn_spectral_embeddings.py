@@ -6,7 +6,7 @@ from docopt import docopt
 from scipy.sparse import load_npz
 from scipy.sparse.linalg import lobpcg, eigsh
 
-from counts2svd import build_ppmi_matrix
+from ..utils.counts2svd import build_ppmi_matrix, load_adjacency_matrix
 from ..utils.tools import build_weighted_bethe_hessian, estimate_rhoB, eigsh_slepc
 from ..representations.matrix_serializer import load_vocabulary
 
@@ -14,7 +14,7 @@ from ..representations.matrix_serializer import load_vocabulary
 def main():
     args = docopt("""
     Usage:
-        learn_spectral_embeddings.py [options] <counts_path> <type_of_laplacian> <output_path>
+        learn_spectral_embeddings.py [options] <counts_path> <type_of_laplacian>
 
     Options:
         --pow NUM          Every non-zero value in adjacency matrix will be scaled^{pow} [default: 1.0]
@@ -22,7 +22,7 @@ def main():
         --max_iter NUM     Maximum number of iterations of LOBPCG algorithm [default: 100]
         --dim NUM          Number of eigen-pairs to return [default: 500]
         --verbosity NUM    Verbosity level of LOBPCG solver [default: 0]
-        --pmi              Turn adjacency matrix into PMI-based adjacency matrix
+        --pmi              Zero elements of adjacency matrix that are zero in positive PMI matrix
         --neg NUM          Negative sampling for PMI-based adjacency matrix [default: 1]
         --scale_weights    Scale weights of the adjacency matrix between 0 and 1
         --tune_rhoB        Solve quadratic eigenproblem to find better rhoB estimation
@@ -31,10 +31,7 @@ def main():
     start = time.time()
     print("Loading adjacency matrix, %f" % time.time())
     counts_path = args["<counts_path>"]
-    data = np.load(counts_path + ".data.npz")["arr_0"]
-    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
-    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
-    adjacency_matrix = scipy.sparse.csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
+    adjacency_matrix = load_adjacency_matrix(counts_path)
     _, iw = load_vocabulary(counts_path + ".words.vocab")
 
     power = float(args["--pow"])
@@ -98,10 +95,11 @@ def main():
     max_iter = int(args["--max_iter"])
     verbosity = int(args["--verbosity"])
 
+    tol = float(args["--tol"])
+    print("Requested tolerance is %f" % tol)
+
     if type_of_laplacian == "bethe_hessian":
         ### Lanzcos algorithm for Bethe Hessian
-        tol = float(args["--tol"])
-        print("Requested tolerance is %f" % tol)
         #vals, vecs = eigsh(L, dim - 1, which='SA', tol=tol)
         vals, vecs = eigsh_slepc(L, k=dim-1, tol=tol, max_iter=max_iter)
 
@@ -113,8 +111,8 @@ def main():
         vals = vals[1:]
         vecs = vecs[:, 1:]
 
-    postfix = "_%s_pow=%.2f_dim=%d" % (type_of_laplacian, power, dim)
-    output_path = args["<output_path>"] + postfix
+    postfix = "_%s_pow=%.2f_dim=%d_tol=%f" % (type_of_laplacian, power, dim, tol)
+    output_path = counts_path + postfix
 
     np.save(output_path + ".vecs", vecs)
     np.save(output_path + ".vals", vals)

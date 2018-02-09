@@ -1,17 +1,3 @@
-How to make spectral clustering great again:
-1/ Similarity matrix - thresholded PMI with different windows
-2/ Laplacians - symmetric normalized
-3/ Eigenweighting - none, commute time, deepwalk (gives small improvements)
-4/ Similarity measures - cos, l2, log cos, log l2 (mostly cos)
-
-Try SVD on PMI matrix - it should not be very different from what we're learning in laplacians.
-Maybe because we learn algebraically largest eigenpairs and not by magnitude?
-
-Ideas for tuning / speeding-up:
-1/ Different PMIs - https://aclanthology.info/pdf/W/W13/W13-3503.pdf
-2/ Preconditioners - max-weight spanning tree or forest
-3/ Less precision
-
 export OUTPUT_DIR=/Users/i.lobov/hyperwords/data/wiki
 export CORPUS=wikipedia.corpus.nodups
 bash scripts/clean_corpus.sh $OUTPUT_DIR/$CORPUS > $OUTPUT_DIR/$CORPUS.clean
@@ -64,4 +50,4 @@ python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/s
 python hyperwords/analogy_eval.py SPECTRAL /Users/i.lobov/hyperwords/data/wiki/spectral_embeddings_d=300 testsets/analogy/msr.txt
 
 
-./configure --with-cc=gcc --with-fc=gfortran --with-debugging=0 COPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -qarch=native -qtune=native'
+./configure --with-cc=gcc --with-fc=gfortran --with-debugging=0 COPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -qarch=native -qtune=native' --with-mpi=0

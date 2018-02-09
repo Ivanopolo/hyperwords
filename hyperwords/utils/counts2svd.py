@@ -11,7 +11,7 @@ from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 def main():
     args = docopt("""
     Usage:
-        counts2svd.py [options] <counts_path> <output_path>
+        counts2svd.py [options] <counts_path>
 
     Options:
         --dim NUM    Dimensionality of eigenvectors [default: 500]
@@ -19,8 +19,9 @@ def main():
         --cds NUM    Context distribution smoothing [default: 0.75]
     """)
 
+    start = time.time()
+
     counts_path = args['<counts_path>']
-    output_path = args['<output_path>']
     dim = int(args['--dim'])
     neg = int(args['--neg'])
     cds = float(args['--cds'])
@@ -29,13 +30,13 @@ def main():
     adjacency_matrix = load_adjacency_matrix(counts_path)
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
-    start = time.time()
     ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
-    print("Time elapsed for SVD: %f" % (time.time() - start))
 
-    np.save(output_path + '.vecs.npy', ut.T)
-    np.save(output_path + '.vals.npy', s)
-    save_vocabulary(output_path + '.words.vocab', iw)
+    np.save(counts_path + '.vecs.npy', ut.T)
+    np.save(counts_path + '.vecs2.npy', vt.T)
+    np.save(counts_path + '.vals.npy', s)
+    save_vocabulary(counts_path + '.words.vocab', iw)
+    print("Time elapsed: %f" % (time.time() - start))
 
 
 def load_adjacency_matrix(counts_path):

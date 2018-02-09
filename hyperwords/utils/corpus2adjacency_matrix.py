@@ -47,7 +47,7 @@ def main():
                     else:
                         key_pair = (tokens[j], tok)
 
-                        pair_counts[key_pair] += 1
+                    pair_counts[key_pair] += 1
 
     print("Building lists for adjacency matrix")
     data = np.zeros(len(pair_counts) * 2, dtype=np.float32)
@@ -64,18 +64,12 @@ def main():
         col_inds[i + num_vals] = idx_a
         data[i + num_vals] = value
 
-    # print("Building adjacency matrix from lists of values and indices")
-    # adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), shape=(n, n), dtype=np.float64)
-    #
-    # print("Writing the output")
-    # output_file_name = corpus_file + "_win=%d.adjacency" % win
-    # save_npz(output_file_name, adjacency_matrix)
-    output_file_name = corpus_file + "_win=%d" % win
+    output_file_name = corpus_file + "_win=%d_thr=%d" % (win, thr)
     np.savez(output_file_name + ".data", np.array(data))
     np.savez(output_file_name + ".row_inds", np.array(row_inds))
     np.savez(output_file_name + ".col_inds", np.array(col_inds))
 
-    output_vocab_name = corpus_file + "_win=%d.words.vocab" % win
+    output_vocab_name = corpus_file + "_win=%d_thr=%d.words.vocab" % (win, thr)
 
     with open(output_vocab_name, "w") as f:
         for word in sorted(wi, key=wi.get, reverse=False):
@@ -88,13 +82,16 @@ def read_vocab(corpus_file, thr):
     vocab = Counter()
     with open(corpus_file) as f:
         for line in f:
-            vocab.update(Counter(line.strip().split()))
+            split_line = line.strip().split()
+            if len(split_line) > 1:
+                vocab.update(Counter(split_line))
 
         w2count = dict([(token, count) for token, count in vocab.items() if count >= thr])
     wi = {}
 
     for e, word in enumerate(sorted(w2count, key=w2count.get, reverse=True)):
         wi[word] = e
+
     return wi, w2count
 
 
