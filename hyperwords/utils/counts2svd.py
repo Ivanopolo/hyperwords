@@ -32,17 +32,15 @@ def main():
     adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
 
     pmi = build_pmi_matrix(adjacency_matrix, cds)
-    explicit = PositiveExplicitLoaded(pmi, normalize=False, neg=neg)
+    explicit = PositiveExplicitLoaded(counts_path, pmi, normalize=False, neg=neg)
 
     start = time.time()
     ut, s, vt = sparsesvd(explicit.m.tocsc(), dim)
     print("Time elapsed for SVD: %f" % (time.time() - start))
 
-    np.save(output_path + '.ut.npy', ut)
-    np.save(output_path + '.s.npy', s)
-    np.save(output_path + '.vt.npy', vt)
+    np.save(output_path + '.vecs.npy', ut.T)
+    np.save(output_path + '.vals.npy', s)
     save_vocabulary(output_path + '.words.vocab', explicit.iw)
-    save_vocabulary(output_path + '.contexts.vocab', explicit.ic)
 
 
 def build_pmi_matrix(adjacency_matrix, cds):

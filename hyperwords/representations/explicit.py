@@ -79,7 +79,8 @@ class PositiveExplicitLoaded(Explicit):
     Negative samples shift the PMI matrix before truncation.
     """
 
-    def __init__(self, pmi, normalize=True, neg=1):
+    def __init__(self, path, pmi, normalize=True, neg=1):
+        self.wi, self.iw = load_vocabulary(path + '.words.vocab')
         self.m = pmi
         self.m.data = np.log(self.m.data)
 
