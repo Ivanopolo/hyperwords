@@ -41,8 +41,8 @@ def main():
 
     output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f_tol=%f" % (dim, neg, cds, tol)
 
-    np.save(output_path + '.vecs.npy', ut.T)
-    np.save(output_path + '.vecs2.npy', vt.T)
+    np.save(output_path + '.vecs.npy', ut)
+    np.save(output_path + '.vecs2.npy', vt)
     np.save(output_path + '.vals.npy', s)
     save_vocabulary(output_path + '.words.vocab', iw)
     print("Time elapsed: %f" % (time.time() - start))
