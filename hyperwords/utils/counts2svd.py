@@ -39,10 +39,12 @@ def main():
     print("Starting SVD, requested tolerance is %f" % tol)
     s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
 
-    np.save(counts_path + '.vecs.npy', ut.T)
-    np.save(counts_path + '.vecs2.npy', vt.T)
-    np.save(counts_path + '.vals.npy', s)
-    save_vocabulary(counts_path + '.words.vocab', iw)
+    output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f_tol=%f" % (dim, neg, cds, tol)
+
+    np.save(output_path + '.vecs.npy', ut.T)
+    np.save(output_path + '.vecs2.npy', vt.T)
+    np.save(output_path + '.vals.npy', s)
+    save_vocabulary(output_path + '.words.vocab', iw)
     print("Time elapsed: %f" % (time.time() - start))
 
 
