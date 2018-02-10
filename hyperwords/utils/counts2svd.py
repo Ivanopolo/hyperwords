@@ -5,6 +5,7 @@ from docopt import docopt
 import numpy as np
 import time
 
+from ..utils.tools import svd_slepc
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
 
@@ -14,9 +15,11 @@ def main():
         counts2svd.py [options] <counts_path>
 
     Options:
-        --dim NUM    Dimensionality of eigenvectors [default: 500]
-        --neg NUM    Number of negative samples; subtracts its log from PMI [default: 1]
-        --cds NUM    Context distribution smoothing [default: 0.75]
+        --dim NUM           Dimensionality of eigenvectors [default: 500]
+        --neg NUM           Number of negative samples; subtracts its log from PMI [default: 1]
+        --cds NUM           Context distribution smoothing [default: 0.75]
+        --tol NUM           Digits of relative precision for eigenvalue decomposition [default: 0.01]
+        --max_iter NUM      Maximum number of iterations of LOBPCG algorithm [default: 100]
     """)
 
     start = time.time()
@@ -25,12 +28,16 @@ def main():
     dim = int(args['--dim'])
     neg = int(args['--neg'])
     cds = float(args['--cds'])
+    tol = float(args["--tol"])
+    max_iter = int(args["--max_iter"])
 
     _, iw = load_vocabulary(counts_path + '.words.vocab')
     adjacency_matrix = load_adjacency_matrix(counts_path)
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
-    ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
+    #ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
+    print("Starting SVD, requested tolerance is %f" % tol)
+    s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
 
     np.save(counts_path + '.vecs.npy', ut.T)
     np.save(counts_path + '.vecs2.npy', vt.T)

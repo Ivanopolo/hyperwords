@@ -72,8 +72,11 @@ def estimate_rhoB(adjacency_matrix):
 
 class MatrixOperator(object):
 
-    def __init__(self, A):
+    def __init__(self, A, allow_tranpose_mult=False):
         self.A = A.astype(PETSc.ScalarType)
+
+        if allow_tranpose_mult:
+            self.At = self.A.transpose()
         self.n_calls = 0
 
     def mult(self, A, x, y):
@@ -81,6 +84,13 @@ class MatrixOperator(object):
         yy = y.getArray(readonly=0)
         yy[:] = self.A.dot(xx)
         self.n_calls += 1
+
+    def multTranspose(self, A, x, y):
+        xx = x.getArray(readonly=1)
+        yy = y.getArray(readonly=0)
+        yy[:] = self.At.dot(xx)
+        self.n_calls += 1
+
 
 def eigsh_slepc(A, k, tol, max_iter):
 
@@ -137,3 +147,53 @@ def eigsh_slepc(A, k, tol, max_iter):
             vecs[:, i] = xr
 
     return vals, vecs
+
+
+def svd_slepc(A, k, tol, max_iter):
+
+    ### Setup matrix operator
+    n = A.shape[0]
+    mat = MatrixOperator(A, allow_tranpose_mult=True)
+    A_operator = PETSc.Mat().createPython([n, n], mat)
+    A_operator.setUp()
+
+    ### Solve eigenproblem
+    S = SLEPc.SVD()
+    S.create()
+    S.setOperator(A_operator)
+    S.setDimensions(k)
+    S.setTolerances(tol, max_iter)
+    S.solve()
+    print("Number of calls to Ax: %d" % mat.n_calls)
+
+    ### Collect results
+    print("")
+    its = S.getIterationNumber()
+    print("Number of iterations of the method: %i" % its)
+    sol_type = S.getType()
+    print("Solution method: %s" % sol_type)
+    nev, ncv, mpd = S.getDimensions()
+    print("NEV %d NCV %d MPD %d" % (nev, ncv, mpd))
+    tol, maxit = S.getTolerances()
+    print("Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit))
+    nconv = S.getConverged()
+    print("Number of converged eigenpairs: %d" % nconv)
+    nconv = min(nconv, k)
+
+    if nconv < k:
+        raise ZeroDivisionError("Failed to converge for requested number of k with maxiter=%d" % max_iter)
+
+    vecs = np.zeros([n, nconv])
+    vecs2 = np.zeros([n, nconv])
+    vals = np.zeros(nconv)
+
+    v, u = A_operator.getVecs()
+
+    if nconv > 0:
+        for i in range(nconv):
+            sigma = S.getSingularTriplet(i, v, u)
+            vals[i] = sigma
+            vecs[:, i] = v
+            vecs2[:, i] = u
+
+    return vals, vecs, vecs2
