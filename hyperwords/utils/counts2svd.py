@@ -7,7 +7,6 @@ import time
 
 from sklearn.decomposition import PCA
 
-from ..utils.tools import svd_slepc
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
 
