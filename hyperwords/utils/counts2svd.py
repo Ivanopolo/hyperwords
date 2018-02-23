@@ -5,7 +5,7 @@ from docopt import docopt
 import numpy as np
 import time
 
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
@@ -40,7 +40,7 @@ def main():
     #ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
     print("Starting SVD, requested tolerance is %f" % tol)
     #s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
-    pca = PCA(n_components=dim, copy=False, svd_solver="randomized", tol=0.0, iterated_power="auto", random_state=0)
+    pca = TruncatedSVD(n_components=dim, n_iter=1, tol=tol, random_state=0)
     pca.fit(ppmi)
     s = pca.singular_values_
     ut = pca.components_
