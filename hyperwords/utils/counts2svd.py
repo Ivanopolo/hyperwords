@@ -37,13 +37,13 @@ def main():
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
     start_learning = time.time()
-    #ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
     print("Starting SVD, requested tolerance is %f" % tol)
+    ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
     #s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
-    pca = TruncatedSVD(n_components=dim, n_iter=1, tol=tol, random_state=0)
-    pca.fit(ppmi)
-    s = pca.singular_values_
-    ut = pca.components_
+    #pca = TruncatedSVD(n_components=dim, n_iter=1, tol=tol, random_state=0)
+    #pca.fit(ppmi)
+    #s = pca.singular_values_
+    #ut = pca.components_
 
     print("Time elapsed on learning: %f" % (time.time() - start_learning))
 
