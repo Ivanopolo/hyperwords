@@ -31,7 +31,8 @@ python -m hyperwords.utils.test_derivative /Users/i.lobov/hyperwords/data/wiki/w
 
 python -m hyperwords.utils.eval_all /Users/i.lobov/hyperwords/data/wiki/win=1_correctly_weighted_bethe_hessian_fast_slepc_pow=0.3_dim=100 /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
 
-
+### For AWS evaluation
+python3 -m hyperwords.utils.eval_all /home/ubuntu/hyperwords/data/svd_testing/wiki_dim=100_win=2_min_count=100_epochs=1_neg=0.w2v /home/ubuntu/hyperwords/testsets/ws/ /home/ubuntu/hyperwords/testsets/analogy/
 
 python hyperwords/ws_eval.py SGNS /Users/i.lobov/hyperwords/data/wiki/deps testsets/ws/ws353.txt
 0.613

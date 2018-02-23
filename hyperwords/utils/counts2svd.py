@@ -35,9 +35,11 @@ def main():
     adjacency_matrix = load_adjacency_matrix(counts_path)
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
+    start_learning = time.time()
     #ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
     print("Starting SVD, requested tolerance is %f" % tol)
     s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
+    print("Time elapsed on learning: %f" % (time.time() - start_learning))
 
     output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f_tol=%f" % (dim, neg, cds, tol)
 
@@ -46,6 +48,7 @@ def main():
     np.save(output_path + '.vals.npy', s)
     save_vocabulary(output_path + '.words.vocab', iw)
     print("Time elapsed: %f" % (time.time() - start))
+
 
 
 def load_adjacency_matrix(counts_path):
