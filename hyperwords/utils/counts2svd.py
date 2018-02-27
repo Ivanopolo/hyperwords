@@ -1,12 +1,12 @@
-from scipy.sparse import csr_matrix, dok_matrix
+import logging
+import time
 from sparsesvd import sparsesvd
 
-from docopt import docopt
 import numpy as np
-import time
+from docopt import docopt
+from scipy.sparse import csr_matrix, dok_matrix
 
-from sklearn.decomposition import PCA, TruncatedSVD
-
+from randomized import randomized_eigh
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
 
@@ -19,8 +19,9 @@ def main():
         --dim NUM           Dimensionality of eigenvectors [default: 500]
         --neg NUM           Number of negative samples; subtracts its log from PMI [default: 1]
         --cds NUM           Context distribution smoothing [default: 0.75]
-        --tol NUM           Digits of relative precision for eigenvalue decomposition [default: 0.01]
-        --max_iter NUM      Maximum number of iterations of LOBPCG algorithm [default: 100]
+        --randomized        Use randomized SVD
+        --oversample NUM    Number of oversamples in randomized SVD [default: 10]
+        --power_iter NUM    Number of iterations of power method in randomized SVD [default: 0]
     """)
 
     start = time.time()
@@ -29,32 +30,34 @@ def main():
     dim = int(args['--dim'])
     neg = int(args['--neg'])
     cds = float(args['--cds'])
-    tol = float(args["--tol"])
-    max_iter = int(args["--max_iter"])
+    randomized = args['--randomized']
+    oversample = int(args['--oversample'])
+    power_iter = int(args['--power_iter'])
+
+    output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f" % (dim, neg, cds)
+    if randomized:
+        output_path += "_rand_oversample=%d_power_iter=%d" % (oversample, power_iter)
+
+    logging.basicConfig(filename=output_path + ".log", filemode="w", level=logging.DEBUG)
+    logging.getLogger().addHandler(logging.StreamHandler())
 
     _, iw = load_vocabulary(counts_path + '.words.vocab')
     adjacency_matrix = load_adjacency_matrix(counts_path)
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
     start_learning = time.time()
-    print("Starting SVD, requested tolerance is %f" % tol)
-    ut, s, vt = sparsesvd(ppmi.tocsc(), dim)
-    #s, ut, vt = svd_slepc(ppmi, dim, tol, max_iter)
-    #pca = TruncatedSVD(n_components=dim, n_iter=1, tol=tol, random_state=0)
-    #pca.fit(ppmi)
-    #s = pca.singular_values_
-    #ut = pca.components_
+    logging.info("Starting SVD")
+    if randomized:
+        s, ut = randomized_eigh(ppmi, oversample, power_iter)
+    else:
+        ut, s, _ = sparsesvd(ppmi.tocsc(), dim)
 
-    print("Time elapsed on learning: %f" % (time.time() - start_learning))
-
-    output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f_tol=%f" % (dim, neg, cds, tol)
+    logging.info("Time elapsed on learning: %f" % (time.time() - start_learning))
 
     np.save(output_path + '.vecs.npy', ut)
-    #np.save(output_path + '.vecs2.npy', vt)
     np.save(output_path + '.vals.npy', s)
     save_vocabulary(output_path + '.words.vocab', iw)
-    print("Time elapsed: %f" % (time.time() - start))
-
+    logging.info("Time elapsed: %f" % (time.time() - start))
 
 
 def load_adjacency_matrix(counts_path):
