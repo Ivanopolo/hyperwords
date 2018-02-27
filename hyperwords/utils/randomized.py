@@ -57,7 +57,6 @@ def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration
     assert M.dtype == np.float64 ### only high precision
     random_state = check_random_state(random_state)
     n_random = n_components + n_oversamples
-    print(n_random)
     Q = randomized_range_finder(M, n_random, n_iter, power_iteration_normalizer, random_state)
 
     # project M to the (k + p) dimensional space using the basis vectors

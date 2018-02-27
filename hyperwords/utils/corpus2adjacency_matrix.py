@@ -3,6 +3,7 @@ import time
 from collections import Counter, defaultdict
 
 from docopt import docopt
+from scipy.sparse import csr_matrix, save_npz
 
 
 def main():
@@ -64,11 +65,9 @@ def main():
         col_inds[i + num_vals] = idx_a
         data[i + num_vals] = value
 
+    adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
     output_file_name = corpus_file + "_win=%d_thr=%d" % (win, thr)
-    np.savez(output_file_name + ".data", np.array(data))
-    np.savez(output_file_name + ".row_inds", np.array(row_inds))
-    np.savez(output_file_name + ".col_inds", np.array(col_inds))
-
+    save_npz(output_file_name + ".adjacency", adjacency_matrix)
     output_vocab_name = corpus_file + "_win=%d_thr=%d.words.vocab" % (win, thr)
 
     with open(output_vocab_name, "w") as f:

@@ -5,10 +5,11 @@ from sparsesvd import sparsesvd
 import numpy as np
 from docopt import docopt
 from numpy.linalg import eig
-from scipy.sparse import csr_matrix, dok_matrix
+from scipy.sparse import csr_matrix, dok_matrix, load_npz
 
 from ..utils.randomized import randomized_eigh
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
+import os
 
 
 def main():
@@ -63,10 +64,13 @@ def main():
 
 
 def load_adjacency_matrix(counts_path):
-    data = np.load(counts_path + ".data.npz")["arr_0"]
-    row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
-    col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
-    adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
+    if os.path.exists(counts_path + ".adjacency.npz"):
+        adjacency_matrix = load_npz(counts_path + ".adjacency.npz")
+    else:
+        data = np.load(counts_path + ".data.npz")["arr_0"]
+        row_inds = np.load(counts_path + ".row_inds.npz")["arr_0"]
+        col_inds = np.load(counts_path + ".col_inds.npz")["arr_0"]
+        adjacency_matrix = csr_matrix((data, (row_inds, col_inds)), dtype=np.float64)
     return adjacency_matrix
 
 
