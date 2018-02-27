@@ -25,13 +25,6 @@ def randomized_range_finder(A, size, n_iter,
     logging.info("Generating random matrix")
     Q = random_state.normal(size=(A.shape[0], size))
 
-    # Deal with "auto" mode
-    if power_iteration_normalizer == 'auto':
-        if n_iter <= 2:
-            power_iteration_normalizer = 'none'
-        else:
-            power_iteration_normalizer = 'LU'
-
     # Perform power iterations with Q to further 'imprint' the top
     # singular vectors of A in Q
 
@@ -57,20 +50,22 @@ def randomized_range_finder(A, size, n_iter,
     return Q
 
 
-def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration_normalizer='auto', random_state=0):
+def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration_normalizer='QR', random_state=0):
     logging.info("Starting randomized SVD with %d components, %d oversamples, %d power iterations" %
                  (n_components, n_oversamples, n_iter))
     assert M.shape[0] == M.shape[1] ### only square matrices
     assert M.dtype == np.float64 ### only high precision
     random_state = check_random_state(random_state)
     n_random = n_components + n_oversamples
+    print(n_random)
     Q = randomized_range_finder(M, n_random, n_iter, power_iteration_normalizer, random_state)
 
     # project M to the (k + p) dimensional space using the basis vectors
     B = safe_sparse_dot(Q.T, M)
-    gramB = safe_sparse_dot(B.T, B, dense_output=True)
+    gramB = safe_sparse_dot(B, B.T, dense_output=True)
     del B
-    logging.info("Sizes of computed gramian matrix are: %d x %d" % gramB.shape)
+    logging.info("Shape of computed gramian matrix is: %d x %d" % gramB.shape)
     s, Uhat = eigh(gramB)
+    logging.info(s)
     U = np.dot(Q, Uhat)
-    return s[:n_components], U[:, :n_components]
+    return np.sqrt(s[-n_components:]), U[:, -n_components:]

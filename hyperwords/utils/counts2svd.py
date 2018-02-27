@@ -4,9 +4,10 @@ from sparsesvd import sparsesvd
 
 import numpy as np
 from docopt import docopt
+from numpy.linalg import eig
 from scipy.sparse import csr_matrix, dok_matrix
 
-from randomized import randomized_eigh
+from ..utils.randomized import randomized_eigh
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 
 
@@ -46,11 +47,22 @@ def main():
     ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
 
     start_learning = time.time()
+
+    print(ppmi.shape)
+    vals, vecs = eig(ppmi.toarray())
+    print(vals)
+    print(vecs[:, np.argsort(vals)][:,-1])
+
     logging.info("Starting SVD")
     if randomized:
-        s, ut = randomized_eigh(ppmi, oversample, power_iter)
+        s, ut = randomized_eigh(ppmi, dim, oversample, power_iter)
     else:
         ut, s, _ = sparsesvd(ppmi.tocsc(), dim)
+        ut = ut.T
+
+    print(ut)
+    print(ut.shape)
+    print(s)
 
     logging.info("Time elapsed on learning: %f" % (time.time() - start_learning))
 
