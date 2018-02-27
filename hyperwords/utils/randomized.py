@@ -66,6 +66,5 @@ def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration
     del B
     logging.info("Shape of computed gramian matrix is: %d x %d" % gramB.shape)
     s, Uhat = eigh(gramB)
-    logging.info(s)
     U = np.dot(Q, Uhat)
     return np.sqrt(s[-n_components:]), U[:, -n_components:]
