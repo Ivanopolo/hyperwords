@@ -22,7 +22,7 @@ def main():
         --cds NUM           Context distribution smoothing [default: 0.75]
         --randomized        Use randomized SVD
         --oversample NUM    Number of oversamples in randomized SVD [default: 10]
-        --power_iter NUM    Number of iterations of power method in randomized SVD [default: 0]
+        --power_iter NUM    Number of iterations of power method in randomized SVD [default: 2]
     """)
 
     start = time.time()
