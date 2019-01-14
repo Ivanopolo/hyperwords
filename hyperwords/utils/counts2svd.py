@@ -3,13 +3,12 @@ import time
 from sparsesvd import sparsesvd
 
 import numpy as np
+import os
 from docopt import docopt
-from numpy.linalg import eig
 from scipy.sparse import csr_matrix, dok_matrix, load_npz
 
-from ..utils.randomized import randomized_eigh
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
-import os
+from ..utils.randomized import randomized_eigh
 
 
 def main():
@@ -20,6 +19,7 @@ def main():
     Options:
         --dim NUM           Dimensionality of eigenvectors [default: 500]
         --neg NUM           Number of negative samples; subtracts its log from PMI [default: 1]
+        --pos NUM           Number of positive samples; add its log to PMI [default: 1]
         --cds NUM           Context distribution smoothing [default: 0.75]
         --randomized        Use randomized SVD
         --oversample NUM    Number of oversamples in randomized SVD [default: 10]
@@ -31,12 +31,13 @@ def main():
     counts_path = args['<counts_path>']
     dim = int(args['--dim'])
     neg = int(args['--neg'])
+    pos = int(args['--pos'])
     cds = float(args['--cds'])
     randomized = args['--randomized']
     oversample = int(args['--oversample'])
     power_iter = int(args['--power_iter'])
 
-    output_path = counts_path + "_svd_dim=%d_neg=%d_cds=%.2f" % (dim, neg, cds)
+    output_path = counts_path + "_svd_dim=%d_neg=%d_pos=%d_cds=%.2f" % (dim, neg, pos, cds)
     if randomized:
         output_path += "_rand_oversample=%d_power_iter=%d" % (oversample, power_iter)
 
@@ -45,7 +46,7 @@ def main():
 
     _, iw = load_vocabulary(counts_path + '.words.vocab')
     adjacency_matrix = load_adjacency_matrix(counts_path)
-    ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg)
+    ppmi = build_ppmi_matrix(adjacency_matrix, cds, neg, pos)
 
     start_learning = time.time()
     logging.info("Starting SVD")
@@ -74,7 +75,7 @@ def load_adjacency_matrix(counts_path):
     return adjacency_matrix
 
 
-def build_ppmi_matrix(adjacency_matrix, neg, cds):
+def build_ppmi_matrix(adjacency_matrix, cds, neg, pos):
     sum_w = np.asarray(adjacency_matrix.sum(axis=1)).flatten()
     sum_c = sum_w.copy()
     sum_c = sum_c ** cds
@@ -84,12 +85,12 @@ def build_ppmi_matrix(adjacency_matrix, neg, cds):
     sum_c = np.reciprocal(sum_c)
 
     pmi = multiply_by_rows(adjacency_matrix, sum_w)
-    pmi = multiply_by_columns(adjacency_matrix, sum_c)
+    pmi = multiply_by_columns(pmi, sum_c)
     pmi = pmi * sum_total
 
     pmi.data = np.log(pmi.data)
 
-    pmi.data -= np.log(neg)
+    pmi.data = pmi.data - np.log(neg) + np.log(pos)
     pmi.data[pmi.data < 0] = 0
     pmi.eliminate_zeros()
 

@@ -23,6 +23,11 @@ python hyperwords/utils/corpus2adjacency_matrix.py --win 5 --thr 1 ./data/wiki/w
 
 python -m hyperwords.utils.learn_spectral_embeddings --pow 0.0 --verbosity 1 /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1 symmetric_normalized /Users/i.lobov/hyperwords/data/wiki/win=1_highest_prec
 
+COUNTS=/Users/i.lobov/hyperwords/data/wiki_test/wiki.test_win=2_thr=1
+python -m hyperwords.utils.counts2svd --dim 1 $COUNTS
+python -m hyperwords.utils.counts2svd --dim 1 --randomized --oversample 2 --power_iter 0 $COUNTS
+
+
 ### Evaluate on word similarity task
 
 python -m hyperwords.utils.find_rhoB /Users/i.lobov/hyperwords/data/wiki/wikipedia.corpus.nodups_counts_win=1

@@ -34,6 +34,10 @@ class SpectralEvaluator(object):
         inner_product = x.dot(y)
         return inner_product / (max(norm(x) * norm(y), self.eps))
 
+    @staticmethod
+    def inner_product(x, y):
+        return x.dot(y)
+
     def cosine_similarity_vecs(self, vocab_representation, vecs):
         normalized_vocab_repr = vocab_representation / np.maximum(norm(vocab_representation, axis=1, keepdims=True), self.eps)
         normalized_vecs = vecs / norm(vecs, axis=1, keepdims=True)
