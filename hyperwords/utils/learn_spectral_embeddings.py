@@ -49,7 +49,7 @@ def main():
         neg = int(args["--neg"])
         print("Building PMI matrix with negative sampling=%d" % neg)
         print("Number of non-zero elements is: %d" % adjacency_matrix.count_nonzero())
-        pmi_matrix = build_ppmi_matrix(adjacency_matrix, cds=0.75, neg=neg)
+        pmi_matrix = build_ppmi_matrix(adjacency_matrix, cds=0.75, neg=neg, pos=1)
         zeros_mask = pmi_matrix.data == 0
         adjacency_matrix.data[zeros_mask] = 0
         adjacency_matrix.eliminate_zeros()

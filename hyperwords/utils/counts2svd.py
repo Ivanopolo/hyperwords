@@ -8,7 +8,7 @@ from docopt import docopt
 from scipy.sparse import csr_matrix, dok_matrix, load_npz
 
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
-from ..utils.randomized import randomized_eigh
+from ..utils.randomized import randomized_eigh, normalized_embedder
 
 
 def main():
@@ -22,6 +22,7 @@ def main():
         --pos NUM           Number of positive samples; add its log to PMI [default: 1]
         --cds NUM           Context distribution smoothing [default: 0.75]
         --randomized        Use randomized SVD
+        --normalized        Use normalized embedder
         --oversample NUM    Number of oversamples in randomized SVD [default: 10]
         --power_iter NUM    Number of iterations of power method in randomized SVD [default: 2]
     """)
@@ -34,6 +35,7 @@ def main():
     pos = int(args['--pos'])
     cds = float(args['--cds'])
     randomized = args['--randomized']
+    normalized = args['--normalized']
     oversample = int(args['--oversample'])
     power_iter = int(args['--power_iter'])
 
@@ -52,6 +54,9 @@ def main():
     logging.info("Starting SVD")
     if randomized:
         s, ut = randomized_eigh(ppmi, dim, oversample, power_iter)
+    elif normalized:
+        ut = normalized_embedder(ppmi, dim, power_iter)
+        s = np.zeros(dim)
     else:
         ut, s, _ = sparsesvd(ppmi.tocsc(), dim)
         ut = ut.T

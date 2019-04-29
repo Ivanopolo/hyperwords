@@ -67,3 +67,25 @@ def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration
     s, Uhat = eigh(gramB)
     U = np.dot(Q, Uhat)
     return np.sqrt(s[-n_components:]), U[:, -n_components:]
+
+
+def orthogonalize_normalize(A):
+    A, _ = linalg.qr(A, mode='economic')
+    A /= np.linalg.norm(A, axis=1, keepdims=True)
+    return A
+
+
+def normalized_embedder(M, n_components, n_iter=0, random_state=0):
+    logging.info("Starting normalized embedder with %d components, %d power iterations" %
+                 (n_components, n_iter))
+    assert M.shape[0] == M.shape[1] ### only square matrices
+    assert M.dtype == np.float64 ### only high precision
+    random_state = check_random_state(random_state)
+
+    Q = orthogonalize_normalize(random_state.normal(size=(M.shape[0], n_components)))
+
+    for i in range(n_iter):
+        Q = orthogonalize_normalize(safe_sparse_dot(M, Q))
+        Q = orthogonalize_normalize(safe_sparse_dot(M.T, Q))
+
+    return Q
