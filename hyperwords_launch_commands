@@ -5,12 +5,28 @@ bash scripts/clean_corpus.sh $OUTPUT_DIR/$CORPUS > $OUTPUT_DIR/$CORPUS.clean
 export CORPUS2PAIRS_OPTS="--thr 100 --win 2 --del"
 pypy hyperwords/corpus2pairs.py $CORPUS2PAIRS_OPTS $OUTPUT_DIR/$CORPUS.clean > $OUTPUT_DIR/${CORPUS}_pairs_win=2
 
+### [START] Normalized embedder experiments
 export OUTPUT_DIR=/Users/i.lobov/hyperwords/data
-export CORPUS=/Users/i.lobov/hyperwords/data/wikipedia.corpus.nodups.clean
+export CORPUS=wikipedia.corpus.nodups.clean
 export CORPUS2PAIRS_OPTS="--thr 100 --win 2 --del"
 /Users/i.lobov/pypy3.6-v7.1.1-osx64/bin/pypy3 hyperwords/corpus2pairs.py $CORPUS2PAIRS_OPTS $OUTPUT_DIR/$CORPUS > $OUTPUT_DIR/${CORPUS}_pairs_win=2
 
+bash scripts/pairs2counts.sh $OUTPUT_DIR/${CORPUS}_pairs_win=2 > $OUTPUT_DIR/${CORPUS}_counts_win=2
 
+COUNTS=$OUTPUT_DIR/${CORPUS}_counts_win=2
+python hyperwords/counts2vocab.py $COUNTS
+
+export OUTPUT_DIR=/Users/i.lobov/hyperwords/data
+export CORPUS=wikipedia.corpus.nodups.clean
+python -m hyperwords.utils.corpus2adjacency_matrix $OUTPUT_DIR/$CORPUS
+
+export COUNTS=$OUTPUT_DIR/${CORPUS}_win=2_thr=100
+python -m hyperwords.utils.counts2svd --dim 100 --randomized --normalized --power_iter 5 $COUNTS
+
+EMBS=$OUTPUT_DIR/${CORPUS}_win=2_thr=100_svd_dim=100_neg=1_pos=1_cds=0.75_rand_oversample=10_power_iter=5_normalized_power_iter=5
+python -m hyperwords.utils.eval_all $EMBS /Users/i.lobov/hyperwords/testsets/ws/ /Users/i.lobov/hyperwords/testsets/analogy/
+
+### [END] Normalized embedder experiments
 
 bash scripts/pairs2counts.sh $OUTPUT_DIR/${CORPUS}_pairs_win=2 > $OUTPUT_DIR/${CORPUS}_counts_win=2
 python hyperwords/counts2vocab.py $OUTPUT_DIR/${CORPUS}_counts_win=2

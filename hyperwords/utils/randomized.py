@@ -4,6 +4,7 @@ import numpy as np
 from scipy import linalg
 from scipy.linalg import eigh
 from scipy.sparse import issparse
+from sklearn.preprocessing import normalize
 from sklearn.utils import check_random_state
 
 
@@ -19,6 +20,7 @@ def safe_sparse_dot(a, b, dense_output=False):
 
 def randomized_range_finder(A, size, n_iter,
                             power_iteration_normalizer,
+                            row_normalized,
                             random_state):
 
     # Generating normal random vectors with shape: (A.shape[0], size)
@@ -41,6 +43,9 @@ def randomized_range_finder(A, size, n_iter,
             Q, _ = linalg.qr(safe_sparse_dot(A, Q), mode='economic')
             Q, _ = linalg.qr(safe_sparse_dot(A.T, Q), mode='economic')
 
+        if row_normalized:
+            Q = normalize(Q)
+
     # Sample the range of A using by linear projection of Q
     # Extract an orthonormal basis
 
@@ -50,14 +55,15 @@ def randomized_range_finder(A, size, n_iter,
     return Q
 
 
-def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration_normalizer='QR', random_state=0):
+def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0,
+                    power_iteration_normalizer='QR', row_normalized=False, random_state=0):
     logging.info("Starting randomized SVD with %d components, %d oversamples, %d power iterations" %
                  (n_components, n_oversamples, n_iter))
     assert M.shape[0] == M.shape[1] ### only square matrices
     assert M.dtype == np.float64 ### only high precision
     random_state = check_random_state(random_state)
     n_random = n_components + n_oversamples
-    Q = randomized_range_finder(M, n_random, n_iter, power_iteration_normalizer, random_state)
+    Q = randomized_range_finder(M, n_random, n_iter, power_iteration_normalizer, row_normalized, random_state)
 
     # project M to the (k + p) dimensional space using the basis vectors
     B = safe_sparse_dot(Q.T, M)
@@ -69,8 +75,12 @@ def randomized_eigh(M, n_components, n_oversamples=10, n_iter=0, power_iteration
     return np.sqrt(s[-n_components:]), U[:, -n_components:]
 
 
-def orthogonalize_normalize(A):
-    A, _ = linalg.qr(A, mode='economic')
+def orthogonalize_normalize(A, orthogonalize=True):
+    A /= np.linalg.norm(A, axis=1, keepdims=True)
+
+    if orthogonalize:
+        A, _ = linalg.qr(A, mode='economic')
+
     A /= np.linalg.norm(A, axis=1, keepdims=True)
     return A
 
@@ -82,7 +92,7 @@ def normalized_embedder(M, n_components, n_iter=0, random_state=0):
     assert M.dtype == np.float64 ### only high precision
     random_state = check_random_state(random_state)
 
-    Q = orthogonalize_normalize(random_state.normal(size=(M.shape[0], n_components)))
+    Q = random_state.normal(size=(M.shape[0], n_components))
 
     for i in range(n_iter):
         Q = orthogonalize_normalize(safe_sparse_dot(M, Q))

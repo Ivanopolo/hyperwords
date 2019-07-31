@@ -6,6 +6,7 @@ import numpy as np
 import os
 from docopt import docopt
 from scipy.sparse import csr_matrix, dok_matrix, load_npz
+from sklearn.preprocessing import normalize
 
 from ..representations.matrix_serializer import save_vocabulary, load_vocabulary
 from ..utils.randomized import randomized_eigh, normalized_embedder
@@ -42,6 +43,8 @@ def main():
     output_path = counts_path + "_svd_dim=%d_neg=%d_pos=%d_cds=%.2f" % (dim, neg, pos, cds)
     if randomized:
         output_path += "_rand_oversample=%d_power_iter=%d" % (oversample, power_iter)
+    if normalized:
+        output_path += "_normalized_power_iter=%d" % power_iter
 
     logging.basicConfig(filename=output_path + ".log", filemode="w", level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
@@ -53,11 +56,13 @@ def main():
     start_learning = time.time()
     logging.info("Starting SVD")
     if randomized:
-        s, ut = randomized_eigh(ppmi, dim, oversample, power_iter)
+        # ppmi = normalize(ppmi, norm='l2', axis=1)
+        s, ut = randomized_eigh(ppmi, dim, oversample, power_iter, row_normalized=normalized)
     elif normalized:
         ut = normalized_embedder(ppmi, dim, power_iter)
         s = np.zeros(dim)
     else:
+        # ppmi = normalize(ppmi, norm='l2', axis=1)
         ut, s, _ = sparsesvd(ppmi.tocsc(), dim)
         ut = ut.T
 

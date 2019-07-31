@@ -69,11 +69,12 @@ def main():
     vecs_list = {
         "Unscaled": partial(embs.get_rep, vecs=embs.vecs),
         #"CommuteTime": partial(embs.get_rep, vecs=embs.commute_time_vecs),
-        #"Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
+        "Sqrt": partial(embs.get_rep, vecs=embs.sqrt_vecs)
     }
 
     sim_fun_list = {
-        "Cos": embs.cosine_similarity
+        "Cos": embs.cosine_similarity,
+        "IP": embs.inner_product
     }
 
     ws_datasets_dir = args["<ws_datasets_dir>"]
